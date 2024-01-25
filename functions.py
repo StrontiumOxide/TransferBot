@@ -39,7 +39,7 @@ def find_person(person_id: int) -> cl.User:
 def add_application(data_user: dict) -> None:
 
     """
-    Данная функция принимает словарь с данными о клиенте и добавляет её в CSV-файл
+    Данная функция принимает словарь с данными о клиенте и добавляет её в базу данных.
     """
 
     client.add_user(
@@ -51,5 +51,9 @@ def add_application(data_user: dict) -> None:
     )
 
 
-# a = find_person(5016217238)
-# pprint(a, sort_dicts=False)
+def enrollment_cash(person_id: int, price: int) -> None:
+    """
+    Данная функция зачисления определённую сумму price на виртуальный счёт пользвателя, который определяется по user_id.
+    """
+
+    client.enrollment_cash(user_id=person_id, price=price)

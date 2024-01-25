@@ -34,7 +34,6 @@ def start(message: Message):
             bot.delete_message(chat_id, message.id)
             bot.send_message(message.chat.id, text, reply_markup=kb.dispatcher_start)
 
-
         elif user.status == Status.courier:
             text = f"""
 Привет, {user.name}!🖐
@@ -49,23 +48,21 @@ def start(message: Message):
             bot.delete_message(chat_id, message.id)
             bot.send_message(message.chat.id, text, reply_markup=kb.courier_start)
 
-
         elif user.status == Status.application:
             text = f"""
 Привет, {user.name}!🖐
 Ваш статус: {user.status}👍
 
-В ближайшее время диспетчер добавит вас в базу⏳
+В ближайшее время администратор созвониться с вами⏳
             """
             bot.delete_message(chat_id, message.id)
             bot.send_message(message.chat.id, text, reply_markup=kb.application_start)
-
-        
+  
         else:
             text = f"""
 🚫🚫🚫ОШИБКА🚫🚫🚫
 Вы есть в базе данных, но ваш статус не определён!🫠
-Обратитесь к диспетчеру!🤵
+Обратитесь к администратору!🤵
             """
             bot.delete_message(chat_id, message.id)
             bot.send_message(message.chat.id, text)
@@ -120,7 +117,7 @@ def get_full_name(message: Message, message_edit: Message):
     text = f"""
 Для дальнейшей работы вам необходимо поделиться вашим номером мобильного телефона📱
 """
-  
+    
     bot.delete_message(chat_id, message_edit.id)
     message_edit = bot.send_message(chat_id, text, reply_markup=kb.get_phone)
 
@@ -140,7 +137,6 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
             "phone_number": phone_number
         }
     )
-    
     text = f"""
 Заявка сохранена!✅
 В ближайшее время диспетчер вас добавит в базу!⏳
@@ -149,7 +145,171 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
     bot.delete_message(chat_id, message.id)
     bot.delete_message(chat_id, message_edit.id)
     bot.send_message(chat_id, text)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data in ["virtual_counts", "work_with_orders", "documentation", "back_main"])
+def courier(callback: CallbackQuery, msg: Message = None):
+    chat_id = callback.message.chat.id
+    message_edit = callback.message
     
+    if callback.data == "virtual_counts":
+        text = f"""
+Ваш виртуальный счёт: {func.find_person(person_id=chat_id).virtual_counts} рублей💵
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "work_with_orders":
+        text = f"""
+Данная функция в разработке🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "documentation":
+        text = f"""
+Данная функция в разработке🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "back_main":
+        start(callback.message)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data in ["work_with_orders_admin", "virtual_counts_admin", 
+                                                                    "personal_data", "look_cash", "replenish_cash"])
+def admin(callback: CallbackQuery, msg: Message = None):
+    chat_id = callback.message.chat.id
+    
+    if callback.data == "work_with_orders_admin":
+        text = f"""
+Данная функция в разработке🚫
+Выберите, что вы хотите сделать🛠
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "virtual_counts_admin":
+        text = f"""
+Выберите, что вы хотите сделать🛠
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.virtual_cash_admin_select
+        )
+
+    elif callback.data == "personal_data":
+        text = f"""
+Данная функция в разработке🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "look_cash":
+        text = f"""
+Выгрузите все данные и посмотрите у кого какой баланс🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "replenish_cash":
+        text = f"""
+Кому вы хотите пополнить виртуальный счёт?🧐
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=callback.message.id,
+            reply_markup=kb.create_kb_cash()
+        )
+
+        # bot.delete_message(chat_id, callback.message.id)
+        # bot.send_message(chat_id, text, reply_markup=kb.create_kb_cash())
+
+@bot.callback_query_handler(func=lambda callback: "cash_select" in callback.data)
+def select_user_cash(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    user_id = callback.data.split(sep="&")[1]
+    user = func.find_person(person_id=user_id)
+    text = f"""
+Сколько вы хотите зачисилить пользователю {user.surname} {user.name} {user.patronymic}?🧐
+Выберите кнопку или напишите собственный вариант💰
+"""
+    bot.delete_message(chat_id, callback.message.id)
+    msg = bot.send_message(chat_id, text, reply_markup=kb.create_money_kb(depth=19))
+
+    bot.register_next_step_handler(callback.message, enrollment, user_id, user, msg)
+
+def enrollment(message: Message, user_id: int, user, msg: Message):
+    chat_id = message.chat.id
+    price = message.text[:-1]
+    text = f"""
+Вы действительно хотите зачислить "{message.text}" на виртуальный счёт пользователя "{user.surname} {user.name} {user.patronymic}"?🧐
+"""
+
+    bot.delete_message(chat_id, message_id=message.id)
+    bot.delete_message(chat_id, message_id=msg.id)
+
+    msg = bot.send_message(chat_id, text, reply_markup=kb.yes_no_reply_kb)
+    bot.register_next_step_handler(message, enrollment_final, price, user, msg)
+
+
+def enrollment_final(message: Message, price: int, user, msg: Message):
+    chat_id = message.chat.id
+
+    if message.text == "Да✅":
+        text = f"""
+Сумма в "{price}💵" зачислена на виртуальный счёт пользователя "{user.surname} {user.name} {user.patronymic}"☑️
+"""        
+        func.enrollment_cash(person_id=user.user_id, price=price)
+
+        bot.send_message(
+            chat_id=user.user_id,
+            text=f"На ваш виртуальный счёт зачислено {price}💵🤩"    
+            ) 
+    elif message.text == "Нет❌":
+        text = f"""
+Сумма в "{price}💵" не зачислена на виртуальный счёт пользователя "{user.surname} {user.name} {user.patronymic}"❌
+"""
+    else:
+        text = f"""
+Некорректный ввод данных🚫
+""" 
+    bot.delete_message(chat_id, message_id=message.id)
+    bot.delete_message(chat_id, message_id=msg.id)
+    bot.send_message(chat_id, text, reply_markup=kb.back_kb)
 
 
 @bot.message_handler()

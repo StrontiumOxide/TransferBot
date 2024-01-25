@@ -177,4 +177,39 @@ class ConnectBD:
                 WHERE p.id = %s
             """ % (user_id,)
         return self.__connect_bd_send_query__(query=query)
+    
+    
+    def get_all_info(self) -> list[tuple]:
+
+        """
+        Метод для выгрузки всей персональных данных
+        """
+
+        query = """
+                SELECT p.id, pd.name, pd.surname, pd.patronymic, 
+                    s.title, p.virtual_cash, pd.phone_number, 
+                    pd.gender, pd.date_of_birth, pd.passport_series,
+                    pd.passport_number, pd.passport_issued_by,
+                    pd.data_of_issue, pd.department_code  
+                    FROM personal p 
+                JOIN status s ON s.id = p.status_id 
+                JOIN personal_data pd ON pd.id = p.data_id  
+                ORDER BY pd.surname
+            """
+        return self.__connect_bd_send_query__(query=query)
+    
+
+    def enrollment_cash(self, user_id: int, price: int) -> None:
+
+        """
+        Данный метод создаёт запрос по добавлению денег на виртуальный счёт пользователя
+        """
+
+        query = """
+                UPDATE personal 
+                SET virtual_cash = (SELECT virtual_cash  FROM personal WHERE id = %s) + %s
+                WHERE id = %s
+            """ % (user_id, price, user_id)
+        
+        self.__connect_bd_send_query__(query=query)
 
