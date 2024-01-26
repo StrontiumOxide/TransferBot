@@ -179,7 +179,7 @@ class ConnectBD:
         return self.__connect_bd_send_query__(query=query)
     
     
-    def get_all_info(self) -> list[tuple]:
+    def get_all_info_cash(self) -> list[tuple]:
 
         """
         Метод для выгрузки всей персональных данных
@@ -193,7 +193,28 @@ class ConnectBD:
                     pd.data_of_issue, pd.department_code  
                     FROM personal p 
                 JOIN status s ON s.id = p.status_id 
-                JOIN personal_data pd ON pd.id = p.data_id  
+                JOIN personal_data pd ON pd.id = p.data_id
+                WHERE s.title = 'Директор' OR s.title = 'Администратор' OR s.title = 'Грузчик'
+                ORDER BY pd.surname
+            """
+        return self.__connect_bd_send_query__(query=query)
+    
+
+    def get_all_info_personal(self) -> list[tuple]:
+
+        """
+        Метод для выгрузки всей персональных данных
+        """
+
+        query = """
+                SELECT p.id, pd.surname, pd.name, pd.patronymic, 
+                    s.title, p.virtual_cash, pd.phone_number, 
+                    pd.gender, pd.date_of_birth, pd.passport_series,
+                    pd.passport_number, pd.passport_issued_by,
+                    pd.data_of_issue, pd.department_code  
+                    FROM personal p 
+                JOIN status s ON s.id = p.status_id 
+                JOIN personal_data pd ON pd.id = p.data_id
                 ORDER BY pd.surname
             """
         return self.__connect_bd_send_query__(query=query)

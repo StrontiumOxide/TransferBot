@@ -219,13 +219,13 @@ def admin(callback: CallbackQuery, msg: Message = None):
 
     elif callback.data == "personal_data":
         text = f"""
-Данная функция в разработке🚫
+Что вы хотите сделать с данными?📑
 """
         bot.edit_message_text(
             text=text,
             chat_id=chat_id,
             message_id= callback.message.id,
-            reply_markup=kb.back_kb
+            reply_markup=kb.personal_data_select_kb
         )
 
     elif callback.data == "look_cash":
@@ -310,6 +310,70 @@ def enrollment_final(message: Message, price: int, user, msg: Message):
     bot.delete_message(chat_id, message_id=message.id)
     bot.delete_message(chat_id, message_id=msg.id)
     bot.send_message(chat_id, text, reply_markup=kb.back_kb)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data in ["statistics", "loading", "download",
+                                                                    "download_persons_data", "dowload_orders"])
+def load_dowl_data(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    
+    if callback.data == "statistics":
+        text = f"""
+Данная функция в разработке🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+    elif callback.data == "loading":
+        text = f"""
+Какие данные вы хотите загрузить?🖨
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.personal_data_loading_kb
+        )
+
+    elif callback.data == "download":
+        text = f"""
+Какие данные вы хотите скачать?🖨
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.personal_data_dowload_kb
+        )
+
+    elif callback.data == "download_persons_data":
+        text = f"""
+Информация о персональных данных пользователей в формате CSV-файла📄
+"""
+        bot.delete_message(chat_id, callback.message.id)
+
+        bot.send_document(
+            chat_id=chat_id,
+            document=func.created_csv_table_personal(),
+            caption=text,
+            reply_markup=kb.back_kb,
+            visible_file_name="Персональные данные пользователей.csv"
+        )
+        
+    elif callback.data == "dowload_orders":
+        text = f"""
+Данная функция в разработке🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
 
 
 @bot.message_handler()

@@ -57,3 +57,25 @@ def enrollment_cash(person_id: int, price: int) -> None:
     """
 
     client.enrollment_cash(user_id=person_id, price=price)
+
+
+def created_csv_table_personal() -> bytes:
+
+    """
+    Данная функция создаёт CSV-таблицу с данными о персонале и возвращает её в битовом варианте.
+    """
+
+    with open(file="db/info_personal.csv", mode="w", encoding="utf-8-sig", newline="") as file:
+        writer = csv.writer(file, delimiter=";")
+        writer.writerow(v.csv_fields)
+        writer.writerows(client.get_all_info_personal())
+        
+    with open(file="db/info_personal.csv", mode="rb") as file:
+        bytes_csv = file.read()
+
+    return bytes_csv
+
+
+    # pprint(data)
+    # with open(file="db/info_personal.csv", mode="w", encoding="utf-8-sig") as file:
+    #     writer = csv.

@@ -37,7 +37,7 @@ yes_no_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
 def create_kb_cash() -> InlineKeyboardMarkup:
     kb_cash = InlineKeyboardMarkup()
 
-    for surname, name, patronymic, user_id in map(lambda x: (x[2], x[1], x[3], x[0]), func.client.get_all_info()):
+    for surname, name, patronymic, user_id in map(lambda x: (x[2], x[1], x[3], x[0]), func.client.get_all_info_cash()):
         kb_cash.add(
             InlineKeyboardButton(
                 text=f"{surname} {name} {patronymic}", 
@@ -130,3 +130,44 @@ virtual_cash_admin_select = InlineKeyboardMarkup(
     ]
 )
 
+
+personal_data_select_kb = InlineKeyboardMarkup(
+    keyboard= [
+        [
+            InlineKeyboardButton("Статистика📈", callback_data="statistics")
+        ],
+        [
+            InlineKeyboardButton("Загрузить данные⬆️", callback_data="loading"),
+            InlineKeyboardButton("Скачать данные⬇️", callback_data="download")
+        ],
+        [
+            InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
+        ]
+    ]
+)
+
+
+personal_data_loading_kb = InlineKeyboardMarkup(
+    keyboard= [
+        [
+            InlineKeyboardButton("Заказы📈", callback_data="_"),
+            InlineKeyboardButton("Скачать данные⬇️", callback_data="_")
+        ],
+        [
+            InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
+        ]
+    ]
+)
+
+
+personal_data_dowload_kb = InlineKeyboardMarkup(
+    keyboard= [
+        [
+            InlineKeyboardButton("Заказы📈", callback_data="dowload_orders"),
+            InlineKeyboardButton("Персональные данные👤", callback_data="download_persons_data")
+        ],
+        [
+            InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
+        ]
+    ]
+)
