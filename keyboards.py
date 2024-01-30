@@ -99,7 +99,7 @@ courier_start = InlineKeyboardMarkup(
 dispatcher_start = InlineKeyboardMarkup(
     keyboard=[
         [
-            InlineKeyboardButton(text="Персональные данные📑", callback_data="personal_data")
+            InlineKeyboardButton(text="Данные📑", callback_data="personal_data")
         ],
         [
             InlineKeyboardButton(text="Работа с заказами📈", callback_data="work_with_orders_admin"),
@@ -150,8 +150,8 @@ personal_data_select_kb = InlineKeyboardMarkup(
 personal_data_loading_kb = InlineKeyboardMarkup(
     keyboard= [
         [
-            InlineKeyboardButton("Заказы📈", callback_data="_"),
-            InlineKeyboardButton("Скачать данные⬇️", callback_data="_")
+            InlineKeyboardButton("Заказы📈", callback_data="loading_orders"),
+            InlineKeyboardButton("Персональные данные👤", callback_data="loading_persons_data")
         ],
         [
             InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")

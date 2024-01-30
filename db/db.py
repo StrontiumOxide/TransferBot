@@ -82,17 +82,17 @@ class ConnectBD:
 
                 CREATE TABLE IF NOT EXISTS personal_data (
                     id BIGINT PRIMARY KEY NOT NULL,
-                    name TEXT NOT NULL,
                     surname TEXT NOT NULL,
+                    name TEXT NOT NULL,
                     patronymic TEXT NOT NULL,
-                    phone_number BIGINT NOT NULL,
+                    phone_number TEXT NOT NULL,
                     gender TEXT,
-                    date_of_birth DATE,
-                    passport_series Integer,
-                    passport_number Integer,
+                    date_of_birth TEXT,
+                    passport_series TEXT,
+                    passport_number TEXT,
                     passport_issued_by TEXT,
-                    data_of_issue DATE,
-                    department_code Integer
+                    data_of_issue TEXT,
+                    department_code TEXT
                 );
 
                 CREATE TABLE IF NOT EXISTS personal (
@@ -166,7 +166,7 @@ class ConnectBD:
         """
 
         query = """
-                SELECT p.id, pd.name, pd.surname, pd.patronymic, 
+                SELECT p.id, pd.surname, pd.name, pd.patronymic, 
                     s.title, p.virtual_cash, pd.phone_number, 
                     pd.gender, pd.date_of_birth, pd.passport_series,
                     pd.passport_number, pd.passport_issued_by,
@@ -228,9 +228,58 @@ class ConnectBD:
 
         query = """
                 UPDATE personal 
-                SET virtual_cash = (SELECT virtual_cash  FROM personal WHERE id = %s) + %s
+                SET virtual_cash = (SELECT virtual_cash FROM personal WHERE id = %s) + %s
                 WHERE id = %s
             """ % (user_id, price, user_id)
         
         self.__connect_bd_send_query__(query=query)
 
+
+    def update_personal_data(self, li: list[any]):
+
+        """
+        Данный метод обновляет данные в базе данных.
+        """
+
+        li[0] = int(li[0])
+        for order, element in enumerate(li):
+            if bool(element) == False:
+                li[order] = "?"
+
+        query = """
+                UPDATE personal_data 
+                SET id = %s,
+                    surname = '%s',
+                    name = '%s',
+                    patronymic = '%s',
+                    phone_number = '%s',
+                    gender = '%s',
+                    date_of_birth = '%s',
+                    passport_series = '%s',
+                    passport_number = '%s',
+                    passport_issued_by = '%s',
+                    data_of_issue = '%s',
+                    department_code = '%s'
+                WHERE id = %s
+            """ % (li[0], li[1], li[2], li[3], li[4], li[5], li[6], li[7], li[8], li[9], li[10], li[11], li[0])
+        
+        self.__connect_bd_send_query__(query=query)
+
+
+    def update_personal(self, li: list[any]) -> None:
+
+        """
+        Данный метод создаёт запрос по добавлению денег на виртуальный счёт пользователя
+        """
+
+        li[0] = int(li[0])
+        query = """
+                UPDATE personal 
+                SET id = %s,
+                    status_id = %s,
+                    data_id = %s,
+                    virtual_cash = %s
+                WHERE id = %s
+            """ % (li[0], li[1], li[2], li[3], li[0])
+        
+        self.__connect_bd_send_query__(query=query)

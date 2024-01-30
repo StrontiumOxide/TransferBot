@@ -12,7 +12,13 @@ bot = TeleBot(v.token)
 print("Бот запущен!")
 
 @bot.message_handler(commands=['start'])
-def start(message: Message):
+# def start(message: Message):
+#     # bot.delete_message(message.chat.id, message.id)
+#     bot.send_photo(message.chat.id, photo=v.photo_intro)
+#     menu(message)
+
+
+def menu(message: Message):
     chat_id = message.chat.id
 
     user = func.find_person(person_id=chat_id)
@@ -139,7 +145,6 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
     )
     text = f"""
 Заявка сохранена!✅
-В ближайшее время диспетчер вас добавит в базу!⏳
 Введите команду /start🛠
 """
     bot.delete_message(chat_id, message.id)
@@ -186,7 +191,7 @@ def courier(callback: CallbackQuery, msg: Message = None):
         )
 
     elif callback.data == "back_main":
-        start(callback.message)
+        menu(callback.message)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data in ["work_with_orders_admin", "virtual_counts_admin", 
@@ -258,19 +263,21 @@ def admin(callback: CallbackQuery, msg: Message = None):
         # bot.delete_message(chat_id, callback.message.id)
         # bot.send_message(chat_id, text, reply_markup=kb.create_kb_cash())
 
+
 @bot.callback_query_handler(func=lambda callback: "cash_select" in callback.data)
 def select_user_cash(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.data.split(sep="&")[1]
     user = func.find_person(person_id=user_id)
     text = f"""
-Сколько вы хотите зачисилить пользователю {user.surname} {user.name} {user.patronymic}?🧐
+Сколько вы хотите зачисилить пользователю "{user.surname} {user.name} {user.patronymic}"?🧐
 Выберите кнопку или напишите собственный вариант💰
 """
     bot.delete_message(chat_id, callback.message.id)
-    msg = bot.send_message(chat_id, text, reply_markup=kb.create_money_kb(depth=19))
+    msg = bot.send_message(chat_id, text, reply_markup=kb.create_money_kb(depth=39))
 
     bot.register_next_step_handler(callback.message, enrollment, user_id, user, msg)
+
 
 def enrollment(message: Message, user_id: int, user, msg: Message):
     chat_id = message.chat.id
@@ -313,7 +320,8 @@ def enrollment_final(message: Message, price: int, user, msg: Message):
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data in ["statistics", "loading", "download",
-                                                                    "download_persons_data", "dowload_orders"])
+                                                                    "download_persons_data", "dowload_orders",
+                                                                    "loading_orders", "loading_persons_data"])
 def load_dowl_data(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     
@@ -352,16 +360,20 @@ def load_dowl_data(callback: CallbackQuery):
 
     elif callback.data == "download_persons_data":
         text = f"""
-Информация о персональных данных пользователей в формате CSV-файла📄
+Информация о персональных данных пользователей в формате xlsx-файла📄
+
+❗️❗️❗️ВНИМАНИЕ❗️❗️❗️
+Заполняйте данную таблицу правильно!
+При некорректной информации с xlsx-файле база данных может быть подвержена форматированию!
 """
         bot.delete_message(chat_id, callback.message.id)
 
         bot.send_document(
             chat_id=chat_id,
-            document=func.created_csv_table_personal(),
+            document=func.created_xlsx_persons_data(),
             caption=text,
             reply_markup=kb.back_kb,
-            visible_file_name="Персональные данные пользователей.csv"
+            visible_file_name="Персональные данные пользователей.xlsx",
         )
         
     elif callback.data == "dowload_orders":
@@ -374,6 +386,52 @@ def load_dowl_data(callback: CallbackQuery):
             message_id= callback.message.id,
             reply_markup=kb.back_kb
         )
+
+    elif callback.data == "loading_orders":
+        text = f"""
+Данная функция в разработке🚫
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )    
+
+    elif callback.data == "loading_persons_data":
+        text = f"""
+Загрузите пожалуйста xlsx-файл с информацией по персональных данных пользователей!
+
+❗️❗️❗️ВНИМАНИЕ❗️❗️❗️
+Заполняйте данную таблицу правильно!
+При некорректной информации с xlsx-файле база данных может быть подвержена форматированию!
+"""
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id
+        )
+
+        bot.register_next_step_handler(callback.message, dowload_xlsx_file, callback.message)
+
+
+def dowload_xlsx_file(message: Message, msg: Message):
+    chat_id = message.chat.id
+
+    bot.delete_message(chat_id, message.id)
+    bot.delete_message(chat_id, msg.id)
+
+    if message.document == None:
+        bot.send_message(chat_id, "Ваше сообщение не содержит файл!❌", reply_markup=kb.back_kb)
+
+    else:
+
+        file_path = bot.get_file(message.document.file_id).file_path
+        dowload_file = bot.download_file(file_path)
+
+        func.dowload_info_xlsx(dowload_file)
+
+        bot.send_message(chat_id, "Данные обновлены!☑️", reply_markup=kb.back_kb)
 
 
 @bot.message_handler()
