@@ -101,6 +101,29 @@ class ConnectBD:
                     data_id BIGINT REFERENCES personal_data(id),
                     virtual_cash BIGINT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS orders (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    contents TEXT NOT NULL,
+                    fio_senders TEXT NOT NULL,
+                    number_tel_senders TEXT NOT NULL,
+                    address_senders TEXT NOT NULL,
+                    fio_recipients TEXT NOT NULL,
+                    number_tel_recipients TEXT NOT NULL,
+                    address_recipients TEXT NOT NULL,
+                    max_count_loader_mam TEXT NOT NULL,
+                    comment_1 TEXT NOT NULL,
+                    price TEXT NOT NULL,
+                    virtual_price TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS orders_personal (
+                    order_id INTEGER REFERENCES orders(id),
+                    personal_id INTEGER REFERENCES personal(id),
+                    CONSTRAINT order_personal_key PRIMARY KEY (order_id, personal_id)
+                );
             """
         
         self.__connect_bd_send_query__(query=query)
@@ -116,6 +139,9 @@ class ConnectBD:
                 DROP TABLE personal;
                 DROP TABLE personal_data;
                 DROP TABLE status;
+                DROP TABLE orders_personal;
+                DROP TABLE orders;
+                DROP TABLE category;
             """
         
         self.__connect_bd_send_query__(query=query)
@@ -182,7 +208,7 @@ class ConnectBD:
     def get_all_info_cash(self) -> list[tuple]:
 
         """
-        Метод для выгрузки всей персональных данных
+        Метод для выгрузки всех персональных данных
         """
 
         query = """
@@ -283,3 +309,44 @@ class ConnectBD:
             """ % (li[0], li[1], li[2], li[3], li[0])
         
         self.__connect_bd_send_query__(query=query)
+
+
+    def add_orders(self, li: list) -> None:
+
+        """
+        Метод для добавления заказов базу данных
+        """
+
+        query = """
+                INSERT INTO orders (title, 
+					date, 
+					contents, 
+					fio_senders, 
+					number_tel_senders, 
+					address_senders,
+					fio_recipients,
+					number_tel_recipients,
+					address_recipients,
+					max_count_loader_mam,
+                    comment_1,
+					price,
+					virtual_price 
+					)
+                VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s)
+                ;
+            """ % (li[0], li[1], li[2], li[3], li[4], li[5], li[6], li[7], li[8], li[9], li[10], li[11], li[12])
+        
+        self.__connect_bd_send_query__(query=query)
+
+
+    def show_info_orders(self) -> list[tuple]:
+
+        """
+        Метод возвращает информацию о заказах
+        """
+
+        query = """
+                SELECT * FROM orders;
+            """
+        
+        return self.__connect_bd_send_query__(query=query)

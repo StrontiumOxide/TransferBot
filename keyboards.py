@@ -12,6 +12,11 @@ get_phone = ReplyKeyboardMarkup(resize_keyboard=True).add(
 
 
 def create_money_kb(depth: int) -> ReplyKeyboardMarkup:
+
+    """
+    Функция для создания клавиатуры с кнопками в виде денег.
+    """
+
     money_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=4)
 
     a, b, c, d = 50, 100, 150, 200
@@ -35,6 +40,12 @@ yes_no_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
 
 
 def create_kb_cash() -> InlineKeyboardMarkup:
+
+    """
+    Функция для создания клавиатуры с контактами в виде кнопок.
+    Нужна для определения клиента зачисления.
+    """
+    
     kb_cash = InlineKeyboardMarkup()
 
     for surname, name, patronymic, user_id in map(lambda x: (x[2], x[1], x[3], x[0]), func.client.get_all_info_cash()):
@@ -171,3 +182,37 @@ personal_data_dowload_kb = InlineKeyboardMarkup(
         ]
     ]
 )
+
+
+work_orders_admin = InlineKeyboardMarkup(
+    keyboard=[
+        [
+            InlineKeyboardButton(text="Создать🛠", callback_data="creating_orders"),
+            InlineKeyboardButton(text="Посмотреть🔍", callback_data="show_orders"),
+            InlineKeyboardButton(text="Удалить❌", callback_data="delete_orders")
+        ],
+        [
+            InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
+        ]
+    ]
+)
+
+def create_order_kb() -> InlineKeyboardMarkup:
+    
+    """
+    Функция для создания клавиатуры с кнопками в виде готовых заказов.
+    """
+    
+    order_kb = InlineKeyboardMarkup()
+
+    order_kb.add(
+        InlineKeyboardButton("Обновить⚙️", callback_data="back")
+    )
+
+    for order, i in enumerate(func.get_info_orders()):
+        order_kb.add(InlineKeyboardButton(text=i[1], callback_data=str(order)))
+
+    order_kb.add(
+        InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
+    )
+    return order_kb

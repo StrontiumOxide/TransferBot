@@ -27,7 +27,7 @@ def find_person(person_id: int) -> cl.User:
         return cl.User(
             dict(
                 zip(
-                    v.csv_fields,
+                    v.personal_data_fields,
                     client.find_user(person_id)[0]
                 )
             )
@@ -64,7 +64,7 @@ def created_xlsx_persons_data() -> bytes:
 
     """
     Данная функция создаёт Excel файл и информацией о персональных данных
-    и возрващает его в битовом варианте
+    и возвращает его в битовом варианте.
     """
 
     workbook = openpyxl.Workbook()
@@ -72,16 +72,16 @@ def created_xlsx_persons_data() -> bytes:
 
     sheet = workbook.create_sheet(title="Персональные данные")
 
-    sheet.append(v.csv_fields)
+    sheet.append(v.personal_data_fields)
     for elements in client.get_all_info_personal():
         sheet.append(elements)
 
     workbook.save(filename="db/persons_data.xlsx")
 
     with open(file="db/persons_data.xlsx", mode="rb") as file:
-        bytes_csv = file.read()
+        bytes_xlsx = file.read()
 
-    return bytes_csv
+    return bytes_xlsx
 
 
 def dowload_info_xlsx(file_bytes: bytes) -> None:
@@ -125,4 +125,68 @@ def send_db() -> None:
         
         client.update_personal_data(li=row)
         client.update_personal(li=list(row_2.values()))
+
+
+def send_info_orders(data: dict) -> None:
+
+    """
+    Данная функция отправлять информация в СУБД для дальнейшей обработки.
+    Переводит словари в списки.
+    """
+
+    client.add_orders(li=list(data.values()))
+
+
+def get_info_orders() -> list[tuple]:
+
+    """
+    Данная функция получает информацию о заказах из базы данных.
+    """
+
+    return client.show_info_orders()
+
+
+def create_order_fields() -> bytes:
+
+    """
+    Данная функция создаёт Excel файл с пунктами о заказе,
+    и возвращает его в битовом варианте
+    """
+
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    workbook.create_sheet(title="Данные о заказе")
+    sheet = workbook["Данные о заказе"]
+
+    for elements in v.order_data_fields:
+        sheet.append([elements])
+
+    workbook.save(filename="db/order_fields.xlsx")
+
+    with open(file="db/order_fields.xlsx", mode="rb") as file:
+        bytes_xlsx = file.read()
+
+    return bytes_xlsx
+
+
+def reader_order_fields(file_bytes: bytes) -> list:
+
+    """
+    Данная функция преобразует битовый вариант файла и изымает информацию
+    о заказе. Возвращает её в виде списка.
+    """
+
+    with open(file="db/order_fields.xlsx", mode="wb") as file:
+        file.write(file_bytes)
+
+    workbook = openpyxl.open(filename="db/order_fields.xlsx", read_only=True)
+    sheet = workbook["Данные о заказе"]
+    
+    data_list =[]
+
+    for element in sheet:
+        if bool(element[1].value) == False:
+            data_list.append(element[1].value)
+
+    return data_list
 
