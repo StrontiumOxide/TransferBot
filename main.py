@@ -2,12 +2,12 @@ from telebot import TeleBot
 from telebot.types import Message, CallbackQuery
 from time import sleep
 from pprint import pprint
-from classes import Status, User
+from classes import Status, User, Order
 import keyboards as kb
 import variable as v
 import functions as func
 
-bot = TeleBot(v.token)
+bot = TeleBot(v.token, parse_mode="Markdown")
 
 print("Бот запущен!")
 
@@ -460,13 +460,16 @@ def dowload_xlsx_file(message: Message, msg: Message):
     [
         "creating_orders",
         "show_orders",
-        "delete_orders"
+        "delete_orders",
+        "update_orders"
     ]
 )
 def works_orders(callback: CallbackQuery):
     chat_id = callback.message.chat.id
+    if callback.data == "update_orders":
+        pass
 
-    if callback.data == "creating_orders":
+    elif callback.data == "creating_orders":
         text = """
 1️⃣ Создание заказа в Telegram.🔵
 Напишите информацию по заказу.📄
@@ -474,14 +477,12 @@ def works_orders(callback: CallbackQuery):
 Заполните данные по образцу строго по порядку:
 
 📌 Наименование заказа
-📌 Дата
+📌 Дата/время
 📌 Содержимое
-📌 ФИО отправителя
-📌 Номер телефона отправителя
-📌 Адрес отправителя
-📌 ФИО получателя
-📌 Номер телефона получателя
-📌 Адрес получателя
+📌 ФИО клиента
+📌 Номер телефона клиента
+📌 Адрес погрузки
+📌 Адрес выгрузки
 📌 Количество рабочих
 📌 Комментарий
 📌 Оплата (в руб.)
@@ -509,15 +510,44 @@ def works_orders(callback: CallbackQuery):
         bot.register_next_step_handler(callback.message, get_data_order, msg, msg2)
 
     elif callback.data == "show_orders":
-        text = f"""
+
+        list_users_id = list(map(lambda element: element[1], func.get_order_personal_info()))
+
+        if chat_id in list_users_id:
+            text = r"""
+У вас есть активный заказ!
+
+Информация о заказе "{order.title}"
+📌 *Дата/время* - {order.datetime}
+📌 *Содержимое* - {order.contets}
+📌 *Адрес погрузки* - {order.address_loading}
+📌 *Адрес выгрузки* - {order.address_unloading}
+📌 *Количество рабочих (шт.)* - {order.max_count_loader_man}
+📌 *Комментарий* - {order.comments}
+📌 *Оплата (руб.)* - {order.price}
+📌 *Стоимость (вирт. руб.)* - {order.virtual_price}
+
+⚠️ВНИМАНИЕ⚠️
+Чтобы просматривать другие заказы - завершите этот!
+"""
+            bot.edit_message_text(
+                text=text,
+                chat_id=chat_id,
+                message_id= callback.message.id,
+                reply_markup=kb.back_kb
+            )
+
+        else:
+
+            text = f"""
 Выберите о каком заказе вы хотите посмотреть информацию🔍
 """
-        bot.edit_message_text(
-            text=text,
-            chat_id=chat_id,
-            message_id= callback.message.id,
-            reply_markup=kb.create_order_kb()
-        )
+            bot.edit_message_text(
+                text=text,
+                chat_id=chat_id,
+                message_id= callback.message.id,
+                reply_markup=kb.create_order_kb()
+            )
 
     elif callback.data == "delete_orders":
         text = f"""
@@ -553,10 +583,10 @@ def get_data_order(message: Message, msg: Message, msg2: Message):
         list_order = message.text.split(sep="\n")
         len_order_data = len(list_order)
 
-    if len_order_data > 13:
+    if len_order_data > len(v.order_data_fields):
         msg_answer = bot.send_message(chat_id, "Введено слишком много информации!🚫", reply_markup=kb.back_kb)
 
-    elif len_order_data < 13:
+    elif len_order_data < len(v.order_data_fields):
         msg_answer = bot.send_message(chat_id, "Введено слишком мало информации!🚫", reply_markup=kb.back_kb)
 
     else:
@@ -590,6 +620,70 @@ def get_answer_order(message: Message, msg_answer: Message, list_order: dict):
 
     else:
         bot.send_message(chat_id, "Ошибка ввода данных🚫", reply_markup=kb.back_kb)
+
+
+@bot.callback_query_handler(
+        func=lambda callback: "order_id" in callback.data or
+        callback.data in ["accept_order"]
+)
+def orders_handler(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+
+
+    if callback.data == "accept_order":
+        bot.answer_callback_query(callback.id, text="В процессе разработки!")
+
+    else:
+
+        order_id = callback.data[len(callback.data.split()[0])+1:]
+        order = func.find_info_order(order_id=order_id)
+
+        text = f"""
+Информация о заказе "{order.title}"
+📌 *Дата/время* - {order.datetime}
+📌 *Содержимое* - {order.contets}
+📌 *Адрес погрузки* - {order.address_loading}
+📌 *Адрес выгрузки* - {order.address_unloading}
+📌 *Количество рабочих (шт.)* - {order.max_count_loader_man}
+📌 *Комментарий* - {order.comments}
+📌 *Оплата (руб.)* - {order.price}
+📌 *Стоимость (вирт. руб.)* - {order.virtual_price}
+
+⚠️ВНИМАНИЕ⚠️
+Перед тем как принимать заказ прочитайте правила пользования данным ботом!
+Отменить заказ будет нельзя!
+    """
+
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id=callback.message.id,
+            reply_markup=kb.order_yes_no_kb(order_id=order_id)
+        )
+
+
+@bot.callback_query_handler(func=lambda callback: "accept_order" in callback.data)
+def accept_orders(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+
+    order_id = callback.data[len(callback.data.split()[0])+1:]
+    order = func.find_info_order(order_id=order_id)
+
+    text = f"""
+Вы приняли заказ "*{order.title}*"
+
+⚠️ВНИМАНИЕ⚠️
+При не выполнении заказа на Вас будут наложены санкции❗️
+"""
+
+    func.add_order_persons(order_id=order_id, user_id=chat_id)
+
+    bot.edit_message_text(
+        text=text,
+        chat_id=chat_id,
+        message_id=callback.message.id,
+        reply_markup=kb.back_kb
+    )
 
 
 @bot.message_handler(content_types=["text"])

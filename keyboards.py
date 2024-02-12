@@ -97,7 +97,7 @@ courier_start = InlineKeyboardMarkup(
             InlineKeyboardButton(text="Документация пользователя📖", callback_data="documentation")
         ],
         [
-            InlineKeyboardButton(text="Заказы📈", callback_data="work_with_orders"),
+            InlineKeyboardButton(text="Заказы📈", callback_data="show_orders"),
             InlineKeyboardButton(text="Виртуальный счёт💰", callback_data="virtual_counts")
         ],
         [
@@ -205,14 +205,32 @@ def create_order_kb() -> InlineKeyboardMarkup:
     
     order_kb = InlineKeyboardMarkup()
 
-    order_kb.add(
-        InlineKeyboardButton("Обновить⚙️", callback_data="back")
-    )
+    # order_kb.add(
+    #     InlineKeyboardButton("Обновить⚙️", callback_data="show_orders")
+    # )
 
-    for order, i in enumerate(func.get_info_orders()):
-        order_kb.add(InlineKeyboardButton(text=i[1], callback_data=str(order)))
+    for order, order_user in enumerate(sorted(func.get_info_orders(), key=lambda x: x[1])):
+        order_kb.add(InlineKeyboardButton(text=f"{order+1}) {order_user[1]}📂", callback_data=f"order_id {order_user[0]}"))
 
     order_kb.add(
         InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
     )
     return order_kb
+
+def order_yes_no_kb(order_id: int) -> InlineKeyboardMarkup:
+    order_yes_no_kb = InlineKeyboardMarkup(
+        keyboard=[
+            [
+                InlineKeyboardButton(text="Документация пользователя📖", callback_data="documentation")
+            ],
+            [
+                InlineKeyboardButton(text="Принять заказ✅", callback_data=f"accept_order {str(order_id)}"),
+                InlineKeyboardButton(text="Отклонить заказ❌", callback_data="show_orders")
+            ],
+            [
+                InlineKeyboardButton("🔙Вернуться назад", callback_data="back_main")
+            ]
+        ]
+    )
+
+    return order_yes_no_kb

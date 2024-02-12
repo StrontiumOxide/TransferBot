@@ -105,18 +105,16 @@ class ConnectBD:
                 CREATE TABLE IF NOT EXISTS orders (
                     id SERIAL PRIMARY KEY,
                     title TEXT NOT NULL,
-                    date TEXT NOT NULL,
+                    datetime TEXT NOT NULL,
                     contents TEXT NOT NULL,
-                    fio_senders TEXT NOT NULL,
-                    number_tel_senders TEXT NOT NULL,
-                    address_senders TEXT NOT NULL,
-                    fio_recipients TEXT NOT NULL,
-                    number_tel_recipients TEXT NOT NULL,
-                    address_recipients TEXT NOT NULL,
-                    max_count_loader_mam TEXT NOT NULL,
-                    comment_1 TEXT NOT NULL,
-                    price TEXT NOT NULL,
-                    virtual_price TEXT NOT NULL
+                    fio_client TEXT NOT NULL,
+                    number_tel_client TEXT NOT NULL,
+                    address_loading TEXT NOT NULL,
+                    address_unloading TEXT NOT NULL,
+                    max_count_loader_man TEXT NOT NULL,
+                    commentss TEXT NOT NULL,
+                    price BIGINT NOT NULL,
+                    virtual_price BIGINT NOT NULL
                 );
 
                 CREATE TABLE IF NOT EXISTS orders_personal (
@@ -318,23 +316,22 @@ class ConnectBD:
         """
 
         query = """
-                INSERT INTO orders (title, 
-					date, 
-					contents, 
-					fio_senders, 
-					number_tel_senders, 
-					address_senders,
-					fio_recipients,
-					number_tel_recipients,
-					address_recipients,
-					max_count_loader_mam,
-                    comment_1,
-					price,
-					virtual_price 
-					)
-                VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s)
+                INSERT INTO orders (
+                    title,
+                    datetime,
+                    contents,
+                    fio_client,
+                    number_tel_client,
+                    address_loading,
+                    address_unloading,
+                    max_count_loader_man,
+                    commentss,
+                    price,
+                    virtual_price
+				)
+                VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s)
                 ;
-            """ % (li[0], li[1], li[2], li[3], li[4], li[5], li[6], li[7], li[8], li[9], li[10], li[11], li[12])
+            """ % (li[0], li[1], li[2], li[3], li[4], li[5], li[6], li[7], li[8], li[9], li[10])
         
         self.__connect_bd_send_query__(query=query)
 
@@ -350,3 +347,46 @@ class ConnectBD:
             """
         
         return self.__connect_bd_send_query__(query=query)
+    
+
+    def find_order(self, order_id: int) -> tuple:
+
+        """
+        Данный метод возвращает информацию об одно заказе.
+        Идентификация происходит по его id.
+        """
+
+        query = """
+                SELECT * FROM orders
+                WHERE id = %s;
+            """ % (order_id,)
+        
+        return self.__connect_bd_send_query__(query=query)
+    
+
+    def add_orders_personals(self, order_id: int, user_id: int) -> None:
+        
+        """
+        Данный метод добавляет пользователю активный заказ.
+        """
+
+        query = """
+                INSERT INTO orders_personal (order_id, personal_id)
+                VALUES (%s, %s);
+            """ % (order_id, user_id)
+        
+        self.__connect_bd_send_query__(query=query)
+    
+
+    def get_order_personal_info(self) -> list[tuple]:
+
+        """
+        Данный метод выгружает информацию обо всех активных заказов.
+        """
+
+        query = """
+                SELECT * FROM orders_personal;
+            """
+        
+        return self.__connect_bd_send_query__(query=query)
+    

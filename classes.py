@@ -12,10 +12,10 @@ class Status:
 class User:
 
     """
-    Данный класс описывает атрибуты пользователя
+    Данный класс описывает атрибуты пользователя.
     """
 
-    def __init__(self, dict_data) -> None:
+    def __init__(self, dict_data: dict) -> None:
         self.user_id = dict_data["id-пользователя"]
         self.name = dict_data["Имя"]
         self.surname = dict_data["Фамилия"]
@@ -28,3 +28,23 @@ class User:
         self.passport_issued_by = dict_data["Кем выдан"] 
         self.date_of_issue = dict_data["Дата выдачи"]
         self.department_code = dict_data["Код подразделения"]
+
+class Order:
+
+    """
+    Данный клас описывает атрибуты заказа.
+    """
+
+    def __init__(self, li: tuple) -> None:
+        self.order_id = li[0]
+        self.title = li[1]
+        self.datetime = li[2]
+        self.contets = li[3]
+        self.fio_client = li[4]
+        self.number_tel_client = li[5]
+        self.address_loading = li[6]
+        self.address_unloading = li[7]
+        self.max_count_loader_man = li[8]
+        self.comments = li[9]
+        self.price = li[10]
+        self.virtual_price = li[11]

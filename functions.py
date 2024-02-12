@@ -161,6 +161,9 @@ def create_order_fields() -> bytes:
     for elements in v.order_data_fields:
         sheet.append([elements])
 
+    sheet.column_dimensions["A"].width = 35
+    sheet.column_dimensions["B"].width = 35  
+
     workbook.save(filename="db/order_fields.xlsx")
 
     with open(file="db/order_fields.xlsx", mode="rb") as file:
@@ -185,8 +188,36 @@ def reader_order_fields(file_bytes: bytes) -> list:
     data_list =[]
 
     for element in sheet:
-        if bool(element[1].value) == False:
-            data_list.append(element[1].value)
+        if bool(element[1].value):
+            data_list.append(str(element[1].value))
 
     return data_list
+
+
+def find_info_order(order_id: int) -> cl.Order:
+    
+    """
+    Данная функция ищет заказ по его id в базе данных и возвращает его
+    в качестве экземпляра класса Order.
+    """
+
+    return cl.Order(li=client.find_order(order_id=order_id)[0])
+
+
+def add_order_persons(order_id: int, user_id):
+    
+    """
+    Данная функция отправляет данные в СУБД по принятому заказу.
+    """
+
+    client.add_orders_personals(order_id=order_id, user_id=user_id)
+
+
+def get_order_personal_info() -> list[tuple]:
+
+    """
+    Данная функция получает и возвращает данные об активных заказов из базы данных.
+    """
+
+    return client.get_order_personal_info()
 
