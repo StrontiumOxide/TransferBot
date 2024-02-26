@@ -24,7 +24,7 @@ class ConnectBD:
         
         try:
                 # Проверка соединения с базой данной
-            with psycopg2.connect(database=database, user=user, password=password) as conn:
+            with psycopg2.connect(database=database, user=user, password=password) as connect:
                 pass
         except psycopg2.OperationalError:
             raise ConnectDateError
@@ -52,12 +52,12 @@ class ConnectBD:
         """
 
             # Подключение к базе данных
-        with psycopg2.connect(database = self.database, user=self.user, password=self.password) as conn:
+        with psycopg2.connect(database = self.database, user=self.user, password=self.password) as connect:
 
                 # Создание курсора для работы с базой данных
-            with conn.cursor() as cursor:
+            with connect.cursor() as cursor:
                 cursor.execute(query=query)
-                conn.commit()
+                connect.commit()
 
                 try:
                     data = cursor.fetchall()
@@ -111,15 +111,15 @@ class ConnectBD:
                     number_tel_client TEXT NOT NULL,
                     address_loading TEXT NOT NULL,
                     address_unloading TEXT NOT NULL,
-                    max_count_loader_man TEXT NOT NULL,
+                    max_count_loader_man BIGINT NOT NULL,
                     commentss TEXT NOT NULL,
                     price BIGINT NOT NULL,
                     virtual_price BIGINT NOT NULL
                 );
 
                 CREATE TABLE IF NOT EXISTS orders_personal (
-                    order_id INTEGER REFERENCES orders(id),
-                    personal_id INTEGER REFERENCES personal(id),
+                    order_id BIGINT REFERENCES orders(id),
+                    personal_id BIGINT REFERENCES personal(id),
                     CONSTRAINT order_personal_key PRIMARY KEY (order_id, personal_id)
                 );
             """
@@ -244,17 +244,17 @@ class ConnectBD:
         return self.__connect_bd_send_query__(query=query)
     
 
-    def enrollment_cash(self, user_id: int, price: int) -> None:
+    def enrollment_cash(self, user_id: int, price: int, operator: str) -> None:
 
         """
-        Данный метод создаёт запрос по добавлению денег на виртуальный счёт пользователя
+        Данный метод создаёт запрос по добавлению/снятию денег на виртуальный счёт пользователя.
         """
 
         query = """
                 UPDATE personal 
-                SET virtual_cash = (SELECT virtual_cash FROM personal WHERE id = %s) + %s
+                SET virtual_cash = (SELECT virtual_cash FROM personal WHERE id = %s) %s %s
                 WHERE id = %s
-            """ % (user_id, price, user_id)
+            """ % (user_id, operator, price, user_id)
         
         self.__connect_bd_send_query__(query=query)
 
@@ -346,6 +346,24 @@ class ConnectBD:
                 SELECT * FROM orders;
             """
         
+        query = """
+                SELECT op.personal_id,
+                    o.id, 
+                    o.title, 
+                    o.datetime, 
+                    o.contents, 
+                    o.fio_client, 
+                    o.number_tel_client, 
+                    o.address_loading, 
+                    o.address_unloading,
+                    o.max_count_loader_man,
+                    o.commentss,
+                    o.price,
+                    o.virtual_price 
+                FROM orders_personal op
+                RIGHT JOIN orders o ON o.id = op.order_id; 
+            """
+        
         return self.__connect_bd_send_query__(query=query)
     
 
@@ -387,6 +405,20 @@ class ConnectBD:
         query = """
                 SELECT * FROM orders_personal;
             """
-        
+                
         return self.__connect_bd_send_query__(query=query)
+    
+
+    def delete_active_order(self, user_id: int) -> None:
+
+        """
+        Данный метод удаляет заказ из таблицы orders_personal.
+        """
+
+        query = """
+                DELETE FROM orders_personal
+                WHERE personal_id = %s;
+            """ % (user_id,)
+        
+        self.__connect_bd_send_query__(query=query)
     

@@ -1,5 +1,6 @@
 from telebot import TeleBot
 from telebot.types import Message, CallbackQuery
+from telebot.apihelper import ApiTelegramException
 from time import sleep
 from pprint import pprint
 from classes import Status, User, Order
@@ -12,60 +13,65 @@ bot = TeleBot(v.token, parse_mode="Markdown")
 print("Бот запущен!")
 
 @bot.message_handler(commands=['start'])
-# def start(message: Message):
-#     # bot.delete_message(message.chat.id, message.id)
-#     bot.send_photo(message.chat.id, photo=v.photo_intro)
-#     menu(message)
-
-def menu(message: Message):
+def start(message: Message):
     chat_id = message.chat.id
 
     user = func.find_person(person_id=chat_id)
-    
+
     if user:
 
         if user.status == Status.dispatcher:
             text = f"""
-Привет, {user.name}!🖐
-Ваш статус: {user.status}👍
+Привет, *{user.name}*🖐
+Ваш статус: *{user.status}*👍
 
 Ваши возможности:
 - добавлять карточки заданий для курьеров📄
 - зачислять виртуальные деньги💵
 - видеть персональные данные👁
-
-Выберите функцию🛠
             """
-            bot.delete_message(chat_id, message.id)
-            bot.send_message(message.chat.id, text, reply_markup=kb.dispatcher_start)
+
+            # bot.send_message(message.chat.id, text)
+            bot.send_photo(
+                chat_id=chat_id,
+                photo=v.open_logo(file_name="admin.jpeg"),
+                caption=text
+            )
+            menu(message)
 
         elif user.status == Status.courier:
             text = f"""
-Привет, {user.name}!🖐
-Ваш статус: {user.status}👍
+Привет, *{user.name}*🖐
+Ваш статус: *{user.status}*👍
 
 Ваши возможности:
 - выбор заказов📄
 - просмотр виртуального счёта💵
-
-Выберите функцию🛠
             """
-            bot.delete_message(chat_id, message.id)
-            bot.send_message(message.chat.id, text, reply_markup=kb.courier_start)
+
+            # bot.send_message(message.chat.id, text)
+            bot.send_photo(
+                chat_id=chat_id,
+                photo=v.open_logo(file_name="load_man.jpg"),
+                caption=text
+            )
+
+            menu(message)
 
         elif user.status == Status.application:
             text = f"""
-Привет, {user.name}!🖐
-Ваш статус: {user.status}👍
+Привет, *{user.name}*🖐
+Ваш статус: *{user.status}*👍
 
 В ближайшее время администратор созвониться с вами⏳
             """
+
             bot.delete_message(chat_id, message.id)
             bot.send_message(message.chat.id, text, reply_markup=kb.application_start)
-  
+
         else:
             text = f"""
-🚫🚫🚫ОШИБКА🚫🚫🚫
+🚫🚫🚫*ОШИБКА*🚫🚫🚫
 Вы есть в базе данных, но ваш статус не определён!🫠
 Обратитесь к администратору!🤵
             """
@@ -74,7 +80,7 @@ def menu(message: Message):
 
     else:
         text = f"""
-Привет, {message.chat.first_name}!🖐
+Привет, *{message.chat.first_name}*🖐
 
 Я бот для компании "Грузоперевозки Михалыч", созданный для служебный целей🚙
 У вас нет права доступа!❌
@@ -83,6 +89,26 @@ def menu(message: Message):
         """
         bot.delete_message(chat_id, message.id)
         bot.send_message(message.chat.id, text, reply_markup=kb.incognito_start)
+
+
+def menu(message: Message):
+    chat_id = message.chat.id
+
+    user = func.find_person(person_id=chat_id)
+    
+    if user.status == Status.dispatcher:
+        text = f"""
+Выберите функцию🛠
+        """
+        bot.delete_message(chat_id, message.id)
+        bot.send_message(message.chat.id, text, reply_markup=kb.dispatcher_start)
+
+    elif user.status == Status.courier:
+        text = f"""
+Выберите функцию🛠
+        """
+        bot.delete_message(chat_id, message.id)
+        bot.send_message(message.chat.id, text, reply_markup=kb.courier_start)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data in ["apply", "no_start"])
@@ -104,7 +130,7 @@ def starting(callback: CallbackQuery, msg: Message = None):
 
     elif callback.data == "no_start":
         text = f"""
-Всего хорошего, {callback.message.chat.first_name}!🖐
+Всего хорошего, *{callback.message.chat.first_name}*🖐
 Возвращайтесь ещё!
 """
         bot.edit_message_text(
@@ -130,21 +156,20 @@ def get_full_name(message: Message, message_edit: Message):
 
 def get_phone_number(message: Message, message_edit: Message, fio: list):
     chat_id = message.chat.id
-    surname, name, patronymic = fio
     phone_number = int(str(message.contact.phone_number).replace("+7", "8", 1))
 
     func.add_application(
         data_user={
             "id": chat_id,
-            "name": name,
-            "surname": surname,
-            "patronymic": patronymic,
+            "name": " ".join(fio),
+            "surname": "?",
+            "patronymic": "?",
             "phone_number": phone_number
         }
     )
     text = f"""
 Заявка сохранена!✅
-Введите команду /start🛠
+Введите команду */start*🛠
 """
     bot.delete_message(chat_id, message.id)
     bot.delete_message(chat_id, message_edit.id)
@@ -165,7 +190,16 @@ def courier(callback: CallbackQuery, msg: Message = None):
     
     if callback.data == "virtual_counts":
         text = f"""
-Ваш виртуальный счёт: {func.find_person(person_id=chat_id).virtual_counts} рублей💵
+Ваш виртуальный счёт: *{func.find_person(person_id=chat_id).virtual_counts} виртуальных рублей*💵
+
+Для пополнения виртуального счёта зачислите деньги на следующие реквизиты:
+
+📌 Получатель - *Администратор*
+📌 Название банка - *Имя банка*
+📌 Номер банковской карты - *0000 0000 0000 0000*
+📌 Комментарий - *напишите ваше ФИО*
+
+Администратор в ближайшее время зачислит вам виртуальные рубли!
 """
         bot.edit_message_text(
             text=text,
@@ -190,7 +224,7 @@ def courier(callback: CallbackQuery, msg: Message = None):
 Данная функция в разработке🚫
 """
         bot.edit_message_text(
-            text=text,
+            text=v.instruction,
             chat_id=chat_id,
             message_id= callback.message.id,
             reply_markup=kb.back_kb
@@ -282,7 +316,7 @@ def select_user_cash(callback: CallbackQuery):
     user_id = callback.data.split(sep="&")[1]
     user = func.find_person(person_id=user_id)
     text = f"""
-Сколько вы хотите зачисилить пользователю "{user.surname} {user.name} {user.patronymic}"?🧐
+Сколько вы хотите зачисилить пользователю "*{user.surname} {user.name} {user.patronymic}*"?🧐
 Выберите кнопку или напишите собственный вариант💰
 """
     bot.delete_message(chat_id, callback.message.id)
@@ -295,7 +329,7 @@ def enrollment(message: Message, user_id: int, user, msg: Message):
     chat_id = message.chat.id
     price = message.text[:-1]
     text = f"""
-Вы действительно хотите зачислить "{message.text}" на виртуальный счёт пользователя "{user.surname} {user.name} {user.patronymic}"?🧐
+Вы действительно хотите зачислить "*{message.text}*" на виртуальный счёт пользователя "*{user.surname} {user.name} {user.patronymic}*"?🧐
 """
 
     bot.delete_message(chat_id, message_id=message.id)
@@ -310,18 +344,18 @@ def enrollment_final(message: Message, price: int, user, msg: Message):
 
     if message.text == "Да✅":
         text = f"""
-Сумма в "{price}💵" зачислена на виртуальный счёт пользователя "{user.surname} {user.name} {user.patronymic}"☑️
+Сумма в "*{price}*💵" зачислена на виртуальный счёт пользователя "*{user.surname} {user.name} {user.patronymic}*"☑️
 """        
-        func.enrollment_cash(person_id=user.user_id, price=price)
+        func.enrollment_cash(person_id=user.user_id, price=price, operator="+")
 
         bot.send_message(
             chat_id=user.user_id,
-            text=f"На ваш виртуальный счёт зачислено {price}💵🤩"    
+            text=f"На ваш виртуальный счёт зачислено *{price}*💵🤩"    
             ) 
         
     elif message.text == "Нет❌":
         text = f"""
-Сумма в "{price}💵" не зачислена на виртуальный счёт пользователя "{user.surname} {user.name} {user.patronymic}"❌
+Сумма в "*{price}*💵" не зачислена на виртуальный счёт пользователя "*{user.surname} {user.name} {user.patronymic}*"❌
 """
     else:
         text = f"""
@@ -381,11 +415,11 @@ def load_dowl_data(callback: CallbackQuery):
 
     elif callback.data == "download_persons_data":
         text = f"""
-Информация о персональных данных пользователей в формате xlsx-файла📄
+Информация о персональных данных пользователей в формате *xlsx-файла*📄
 
-❗️❗️❗️ВНИМАНИЕ❗️❗️❗️
+⚠️*ВНИМАНИЕ*⚠️
 Заполняйте данную таблицу правильно!
-При некорректной информации с xlsx-файле база данных может быть подвержена форматированию!
+При некорректной информации с *xlsx-файле* база данных может быть подвержена форматированию!
 """
         bot.delete_message(chat_id, callback.message.id)
 
@@ -421,11 +455,11 @@ def load_dowl_data(callback: CallbackQuery):
 
     elif callback.data == "loading_persons_data":
         text = f"""
-Загрузите пожалуйста xlsx-файл с информацией по персональных данных пользователей!
+Загрузите пожалуйста *xlsx-файл* с информацией по персональных данных пользователей!
 
-❗️❗️❗️ВНИМАНИЕ❗️❗️❗️
+⚠️ВНИМАНИЕ⚠️
 Заполняйте данную таблицу правильно!
-При некорректной информации с xlsx-файле база данных может быть подвержена форматированию!
+При некорректной информации с *xlsx-файле* база данных может быть подвержена форматированию!
 """
         bot.edit_message_text(
             text=text,
@@ -461,7 +495,8 @@ def dowload_xlsx_file(message: Message, msg: Message):
         "creating_orders",
         "show_orders",
         "delete_orders",
-        "update_orders"
+        "update_orders",
+        "order_end"
     ]
 )
 def works_orders(callback: CallbackQuery):
@@ -471,7 +506,7 @@ def works_orders(callback: CallbackQuery):
 
     elif callback.data == "creating_orders":
         text = """
-1️⃣ Создание заказа в Telegram.🔵
+1️⃣ *Создание заказа в Telegram*🔵
 Напишите информацию по заказу.📄
 Каждый пункт вводить в следующей строке❗️
 Заполните данные по образцу строго по порядку:
@@ -489,12 +524,12 @@ def works_orders(callback: CallbackQuery):
 📌 Стоимость (вирт. руб.)
 
 
-2️⃣ Создание файла через Excel.⚪️
+2️⃣ *Создание файла через Excel*⚪️
 Скачайте файл выше, содержащий образец.📑 
 Заполните данные и отправьте обратно.✏️
 
 
-⚠️ВНИМАНИЕ⚠️
+⚠️*ВНИМАНИЕ*⚠️
 При неправильной последовательности информация о заказе может быть не правильно передана или вовсе заказ не будет создан!😡
 """
 
@@ -511,30 +546,50 @@ def works_orders(callback: CallbackQuery):
 
     elif callback.data == "show_orders":
 
-        list_users_id = list(map(lambda element: element[1], func.get_order_personal_info()))
+        list_id = (0, 0)
+        for order_id, user_id in func.get_order_personal_info():
+            if chat_id == user_id:
+                list_id = (order_id, user_id)
 
-        if chat_id in list_users_id:
-            text = r"""
-У вас есть активный заказ!
 
-Информация о заказе "{order.title}"
-📌 *Дата/время* - {order.datetime}
-📌 *Содержимое* - {order.contets}
-📌 *Адрес погрузки* - {order.address_loading}
-📌 *Адрес выгрузки* - {order.address_unloading}
-📌 *Количество рабочих (шт.)* - {order.max_count_loader_man}
-📌 *Комментарий* - {order.comments}
-📌 *Оплата (руб.)* - {order.price}
-📌 *Стоимость (вирт. руб.)* - {order.virtual_price}
+        if chat_id == list_id[1]:
 
-⚠️ВНИМАНИЕ⚠️
-Чтобы просматривать другие заказы - завершите этот!
+            order = func.find_info_order(order_id=list_id[0])
+
+            if order.active_loader_man == order.max_count_loader_man:
+                client_fio = order.fio_client
+                number_client = order.number_tel_client
+                text_end = "Чтобы просматривать другие заказы - завершите этот!"
+                local_keyboard = kb.order_end
+            else:
+                client_fio = "???? ???? ????"
+                number_client = "?(???)???-??-??"
+                text_end = f"Для того чтобы открылась личная информация о заказчике необходимо дождаться ещё *{int(order.max_count_loader_man)-int(order.active_loader_man)}* грузчика(ов)!"
+                local_keyboard = kb.order_end
+
+            text = f"""
+*У ВАС ЕСТЬ АКТИВНЫЙ ЗАКАЗ!*
+
+Информация о заказе *"{order.title}"*   *{order.active_loader_man}*/*{order.max_count_loader_man}*👤
+
+📌 Дата/время - *{order.datetime}*
+📌 Содержимое - *{order.contets}*
+📌 Адрес погрузки - *{order.address_loading}*
+📌 Адрес выгрузки - *{order.address_unloading}*
+📌 Комментарий - *{order.comments}*
+📌 Оплата (руб.) - *{order.price}*
+📌 Стоимость (вирт. руб.) - *{order.virtual_price}*
+
+📌 Клиент - *{client_fio}*
+📌 Номер телефона - *{number_client}*
+
+⚠️*ВНИМАНИЕ*⚠️
 """
             bot.edit_message_text(
-                text=text,
+                text=text+text_end,
                 chat_id=chat_id,
                 message_id= callback.message.id,
-                reply_markup=kb.back_kb
+                reply_markup=local_keyboard
             )
 
         else:
@@ -542,12 +597,19 @@ def works_orders(callback: CallbackQuery):
             text = f"""
 Выберите о каком заказе вы хотите посмотреть информацию🔍
 """
-            bot.edit_message_text(
-                text=text,
-                chat_id=chat_id,
-                message_id= callback.message.id,
-                reply_markup=kb.create_order_kb()
-            )
+            try:
+                bot.edit_message_text(
+                    text=text,
+                    chat_id=chat_id,
+                    message_id= callback.message.id,
+                    reply_markup=kb.create_order_kb()
+                )
+            except ApiTelegramException:
+                bot.answer_callback_query(
+                    callback_query_id=callback.id,
+                    text="Обновлений не было❌",
+                    show_alert=True
+                )
 
     elif callback.data == "delete_orders":
         text = f"""
@@ -560,6 +622,26 @@ def works_orders(callback: CallbackQuery):
             reply_markup=kb.back_kb
         )
         
+    elif callback.data == "order_end":
+
+        func.delete_active_orders(user_id=chat_id)
+
+        text = f"""
+*Вы завершили данный заказ*✅
+
+Для совершения дальнейших заказов незабывайте пополнять свой виртуальный баланс💰
+"""
+        
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id= callback.message.id,
+            reply_markup=kb.back_kb
+        )
+
+        func.delete_active_orders(user_id=chat_id)
+
+
 def get_data_order(message: Message, msg: Message, msg2: Message):
     chat_id = message.chat.id
 
@@ -597,8 +679,8 @@ def get_data_order(message: Message, msg: Message, msg2: Message):
         text_end = "\n⚠️ВНИМАНИЕ⚠️\nПроверьте правильность введённой информации!"
         
         info = ""
-        for element in list_order.items():
-            info += f"📌 {' - '.join(element)}\n"
+        for a, b in list_order.items():
+            info += f"📌 {' - '.join([f'{a}', f'*{b}*'])}\n"
 
         msg_answer = bot.send_message(chat_id, text_start+info+text_end, reply_markup=kb.yes_no_reply_kb)
 
@@ -611,7 +693,11 @@ def get_answer_order(message: Message, msg_answer: Message, list_order: dict):
     bot.delete_message(chat_id, message.id)
     bot.delete_message(chat_id, msg_answer.id)
 
-    if text_msg == "Да✅":
+    if (text_msg == "Да✅" and 
+        list_order["Оплата (в руб.)"].isdigit() and 
+        list_order["Стоимость (вирт. руб.)"].isdigit() and 
+        list_order["Количество рабочих (шт.)"].isdigit()):
+
         func.send_info_orders(data=list_order)
         bot.send_message(chat_id, "Заказ добавлен☑️", reply_markup=kb.back_kb)
 
@@ -637,19 +723,26 @@ def orders_handler(callback: CallbackQuery):
 
         order_id = callback.data[len(callback.data.split()[0])+1:]
         order = func.find_info_order(order_id=order_id)
+        user = func.find_person(person_id=chat_id)
+
+        if user.status == Status.dispatcher:
+            local_keyboard = kb.order_yes_no_admin_kb
+        else:
+            local_keyboard = kb.order_yes_no_kb(order_id=order_id)
+        
 
         text = f"""
-Информация о заказе "{order.title}"
-📌 *Дата/время* - {order.datetime}
-📌 *Содержимое* - {order.contets}
-📌 *Адрес погрузки* - {order.address_loading}
-📌 *Адрес выгрузки* - {order.address_unloading}
-📌 *Количество рабочих (шт.)* - {order.max_count_loader_man}
-📌 *Комментарий* - {order.comments}
-📌 *Оплата (руб.)* - {order.price}
-📌 *Стоимость (вирт. руб.)* - {order.virtual_price}
+*Информация о заказе "{order.title}"*   *{order.active_loader_man}*/*{order.max_count_loader_man}*👤
 
-⚠️ВНИМАНИЕ⚠️
+📌 Дата/время - *{order.datetime}*
+📌 Содержимое - *{order.contets}*
+📌 Адрес погрузки - *{order.address_loading}*
+📌 Адрес выгрузки - *{order.address_unloading}*
+📌 Комментарий - *{order.comments}*
+📌 Оплата (руб.) - *{order.price}*
+📌 Стоимость (вирт. руб.) - *{order.virtual_price}*
+
+⚠️*ВНИМАНИЕ*⚠️
 Перед тем как принимать заказ прочитайте правила пользования данным ботом!
 Отменить заказ будет нельзя!
     """
@@ -658,7 +751,7 @@ def orders_handler(callback: CallbackQuery):
             text=text,
             chat_id=chat_id,
             message_id=callback.message.id,
-            reply_markup=kb.order_yes_no_kb(order_id=order_id)
+            reply_markup=local_keyboard
         )
 
 
@@ -667,29 +760,53 @@ def accept_orders(callback: CallbackQuery):
     chat_id = callback.message.chat.id
 
     order_id = callback.data[len(callback.data.split()[0])+1:]
-    order = func.find_info_order(order_id=order_id)
 
-    text = f"""
+    order = func.find_info_order(order_id=order_id)
+    user = func.find_person(person_id=chat_id)
+
+    if order.virtual_price > user.virtual_counts:
+        text = f"""
+⚠️ВНИМАНИЕ⚠️
+У вас недостаточно средст для приобретения заказа "*{order.title}*"😒
+Ваш виртуальный баланс: *{user.virtual_counts}*💵
+
+Пополните виртуальный счёт чтобы выполнять заказы😁
+"""
+            
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id=callback.message.id,
+            reply_markup=kb.order_no_money
+        )
+
+    else:
+
+        func.enrollment_cash(person_id=chat_id, price=order.virtual_price, operator="-")
+        func.add_order_persons(order_id=order_id, user_id=chat_id)
+        user = func.find_person(person_id=chat_id)
+
+        text = f"""
 Вы приняли заказ "*{order.title}*"
+С вашево виртуального счёта списано *{order.virtual_price}*💵
+Ваш виртуальный баланс: *{user.virtual_counts}*💵
 
 ⚠️ВНИМАНИЕ⚠️
 При не выполнении заказа на Вас будут наложены санкции❗️
 """
 
-    func.add_order_persons(order_id=order_id, user_id=chat_id)
-
-    bot.edit_message_text(
-        text=text,
-        chat_id=chat_id,
-        message_id=callback.message.id,
-        reply_markup=kb.back_kb
-    )
+        bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id=callback.message.id,
+            reply_markup=kb.order_no_money
+        )
 
 
 @bot.message_handler(content_types=["text"])
 def echo(message: Message):
     bot.delete_message(message.chat.id, message.id)
-    bot.send_message(message.chat.id, "Извините я вас не понимаю!🧐\nВведите команду /start🛠")
+    bot.send_message(message.chat.id, "Извините я вас не понимаю!🧐\nВведите команду */start*🛠")
 
 
 bot.infinity_polling(skip_pending=True)

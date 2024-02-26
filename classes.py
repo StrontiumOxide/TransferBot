@@ -1,3 +1,4 @@
+from collections import Counter
 class Status:
 
     """
@@ -35,7 +36,7 @@ class Order:
     Данный клас описывает атрибуты заказа.
     """
 
-    def __init__(self, li: tuple) -> None:
+    def __init__(self, li: tuple, active_loader_man = None) -> None:
         self.order_id = li[0]
         self.title = li[1]
         self.datetime = li[2]
@@ -48,3 +49,6 @@ class Order:
         self.comments = li[9]
         self.price = li[10]
         self.virtual_price = li[11]
+        self.active_loader_man = active_loader_man
+
+

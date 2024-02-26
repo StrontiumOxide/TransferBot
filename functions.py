@@ -1,10 +1,9 @@
-import csv
-import json
 import openpyxl
 import classes as cl
 import variable as v
 from pprint import pprint
 from db.db import ConnectBD
+from collections import Counter
 
 client = ConnectBD(v.data_connect)
 
@@ -52,12 +51,12 @@ def add_application(data_user: dict) -> None:
     )
 
 
-def enrollment_cash(person_id: int, price: int) -> None:
+def enrollment_cash(person_id: int, price: int, operator: str) -> None:
     """
-    Данная функция зачисления определённую сумму price на виртуальный счёт пользвателя, который определяется по user_id.
+    Данная функция зачисления/снятия определённой суммы price на виртуальный счёт пользвателя, который определяется по user_id.
     """
 
-    client.enrollment_cash(user_id=person_id, price=price)
+    client.enrollment_cash(user_id=person_id, price=price, operator=operator)
 
 
 def created_xlsx_persons_data() -> bytes:
@@ -143,7 +142,24 @@ def get_info_orders() -> list[tuple]:
     Данная функция получает информацию о заказах из базы данных.
     """
 
-    return client.show_info_orders()
+    iterable = client.show_info_orders()
+    
+    update_list = []
+    list_index_orders = map(lambda x: x[1], iterable)
+
+    for order_id, count_repeat in Counter(list_index_orders).items():
+        for info_order in iterable:
+            if order_id == info_order[1]:
+                temperary_list = list(info_order)
+                temperary_list.append(count_repeat)
+                update_list.append(temperary_list)
+                break
+
+    for element in update_list:
+        if element[0] == None:
+            element[-1] -= 1
+            
+    return update_list
 
 
 def create_order_fields() -> bytes:
@@ -201,7 +217,12 @@ def find_info_order(order_id: int) -> cl.Order:
     в качестве экземпляра класса Order.
     """
 
-    return cl.Order(li=client.find_order(order_id=order_id)[0])
+    active_load_man = "None"
+    for order in get_info_orders():
+        if int(order_id) == int(order[1]):
+            active_load_man = order[-1]
+            
+    return cl.Order(li=client.find_order(order_id=order_id)[0], active_loader_man=active_load_man)
 
 
 def add_order_persons(order_id: int, user_id):
@@ -221,3 +242,14 @@ def get_order_personal_info() -> list[tuple]:
 
     return client.get_order_personal_info()
 
+
+def delete_active_orders(user_id: int) -> None:
+
+    """
+    Данная функция отправляет данные в СУБД по удалению активного заказа.
+    """
+
+    client.delete_active_order(user_id=user_id)
+
+
+result = find_info_order(1)
