@@ -36,7 +36,7 @@ class ConnectBD:
             self.password = password
             self.__create_table__()
 
-            print(f"Авторизация к базе данных {self.database} произведено успешно!")
+            print(f"Авторизация к базе данных {self.database} произведена успешно!")
             
 
     def __str__(self) -> str:
@@ -118,8 +118,8 @@ class ConnectBD:
                 );
 
                 CREATE TABLE IF NOT EXISTS orders_personal (
-                    order_id BIGINT REFERENCES orders(id),
-                    personal_id BIGINT REFERENCES personal(id),
+                    order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
+                    personal_id BIGINT REFERENCES personal(id) ON DELETE CASCADE,
                     CONSTRAINT order_personal_key PRIMARY KEY (order_id, personal_id)
                 );
             """
@@ -206,7 +206,7 @@ class ConnectBD:
     def get_all_info_cash(self) -> list[tuple]:
 
         """
-        Метод для выгрузки всех персональных данных
+        Метод для выгрузки всех персональных данных для совершения транзакций.
         """
 
         query = """
@@ -327,11 +327,12 @@ class ConnectBD:
                     max_count_loader_man,
                     commentss,
                     price,
-                    virtual_price
+                    virtual_price,
+                    status
 				)
-                VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s)
+                VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, '%s')
                 ;
-            """ % (li[0], li[1], li[2], li[3], li[4], li[5], li[6], li[7], li[8], li[9], li[10])
+            """ % (li[0], li[1], li[2], li[3], li[4], li[5], li[6], li[7], li[8], li[9], li[10], "Непринят")
         
         self.__connect_bd_send_query__(query=query)
 
@@ -359,7 +360,8 @@ class ConnectBD:
                     o.max_count_loader_man,
                     o.commentss,
                     o.price,
-                    o.virtual_price 
+                    o.virtual_price,
+                    o.status
                 FROM orders_personal op
                 RIGHT JOIN orders o ON o.id = op.order_id; 
             """
@@ -421,4 +423,32 @@ class ConnectBD:
             """ % (user_id,)
         
         self.__connect_bd_send_query__(query=query)
+
+
+    def update_status_order(self, order_id: int) -> None:
+
+        """
+        Данный метод обновляет статус заказа
+        """
+
+        query = """
+                UPDATE orders
+                SET status = 'Принят'
+                WHERE id = %s;
+            """ % (order_id,)
+        
+        self.__connect_bd_send_query__(query=query)
+
     
+    def delete_order(self, order_id: int) -> None:
+
+        """
+        Данный метод удаляет заказы.
+        """
+
+        query = """
+                DELETE FROM orders
+                WHERE id = %s;
+            """ % (order_id,)
+        
+        self.__connect_bd_send_query__(query=query)

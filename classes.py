@@ -21,6 +21,7 @@ class User:
         self.name = dict_data["Имя"]
         self.surname = dict_data["Фамилия"]
         self.patronymic = dict_data["Отчество"]
+        self.phone_number = dict_data['Номер телефона']
         self.status = dict_data["Статус"]
         self.virtual_counts = dict_data["Баланс"]
         self.date_of_birth = dict_data["Дата рождения"]
@@ -50,5 +51,6 @@ class Order:
         self.price = li[10]
         self.virtual_price = li[11]
         self.active_loader_man = active_loader_man
+        self.status = li[12]
 
 

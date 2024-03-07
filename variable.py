@@ -1,4 +1,4 @@
-token = '6842206882:AAFmtRDNoHiEFnwGDCsc9TuzOSswqhsnXmo'
+TOKEN = '6842206882:AAFmtRDNoHiEFnwGDCsc9TuzOSswqhsnXmo'
 
 data_connect = {
     "database": "TransferDataBot",
@@ -12,7 +12,6 @@ category_id = {
     "Грузчик": 3,
     "Заявка": 4
 }
-
 
 personal_data_fields = [
     "id-пользователя",
@@ -51,6 +50,10 @@ def open_logo(file_name: str) -> bytes:
     with open(file=f"db/{file_name}", mode="rb") as file:
         return file.read()
     
+
+local_url = "database = self.database, user=self.user, password=self.password"
+online_url = "'postgresql://superadmin:02Trans_fer20@79.174.88.128:16564/BDTransferBot'"    
+example_url = "'postgresql://user:password@host:port/database_name'"
 
 
 instruction = """

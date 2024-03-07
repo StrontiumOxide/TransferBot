@@ -59,6 +59,15 @@ def enrollment_cash(person_id: int, price: int, operator: str) -> None:
     client.enrollment_cash(user_id=person_id, price=price, operator=operator)
 
 
+def get_full_info_personal() -> list[tuple]:
+
+    """
+    Данная функция возвразает список списков с персональными данными.
+    """
+
+    return client.get_all_info_personal()
+
+
 def created_xlsx_persons_data() -> bytes:
 
     """
@@ -98,11 +107,10 @@ def dowload_info_xlsx(file_bytes: bytes) -> None:
 def send_db() -> None:
 
     """
-    Данная функция читает информация из Excel файла и возвращает список списков.
+    Данная функция читает информацию из Excel файла и возвращает список списков.
     Отправляет информацию в СУБД.
     """
     
-
     workbook = openpyxl.open(filename="db/dowload_info_personal.xlsx", read_only=True)["Персональные данные"]
     
     """
@@ -158,7 +166,7 @@ def get_info_orders() -> list[tuple]:
     for element in update_list:
         if element[0] == None:
             element[-1] -= 1
-            
+
     return update_list
 
 
@@ -230,8 +238,13 @@ def add_order_persons(order_id: int, user_id):
     """
     Данная функция отправляет данные в СУБД по принятому заказу.
     """
-
+        # Добавления грузчика на заказ
     client.add_orders_personals(order_id=order_id, user_id=user_id)
+
+        # Проверка на укомплектованность заказа
+    order = find_info_order(order_id=order_id)
+    if order.max_count_loader_man == order.active_loader_man:
+        client.update_status_order(order_id=order_id)
 
 
 def get_order_personal_info() -> list[tuple]:
@@ -243,13 +256,24 @@ def get_order_personal_info() -> list[tuple]:
     return client.get_order_personal_info()
 
 
-def delete_active_orders(user_id: int) -> None:
+def delete_active_orders(user_id: int, order_id: int) -> None:
 
     """
     Данная функция отправляет данные в СУБД по удалению активного заказа.
     """
-
+        # Удаление грузчика из списка активных.
     client.delete_active_order(user_id=user_id)
 
+        # Проверка на антиукомплектование заказа для дальнейшего удаления.
+    order = find_info_order(order_id=order_id)
+    if order.active_loader_man == 0:
+        client.delete_order(order_id=order_id)
 
-result = find_info_order(1)
+
+def delete_order_admin(order_id: int) -> None:
+    
+    """
+    Данная функция удаляет заказы. Идентификация происходит по его id.
+    """
+
+    client.delete_order(order_id=order_id)

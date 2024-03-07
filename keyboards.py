@@ -189,13 +189,13 @@ work_orders_admin = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text="Создать🛠", callback_data="creating_orders"),
             InlineKeyboardButton(text="Посмотреть🔍", callback_data="show_orders"),
-            # InlineKeyboardButton(text="Удалить❌", callback_data="delete_orders")
         ],
         [
             InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
         ]
     ]
 )
+
 
 def create_order_kb() -> InlineKeyboardMarkup:
     
@@ -209,19 +209,23 @@ def create_order_kb() -> InlineKeyboardMarkup:
         InlineKeyboardButton("Обновить⚙️", callback_data="show_orders")
     )
 
+    order_2 = 0
     for order, order_user in enumerate(sorted(func.get_info_orders(), key=lambda x: x[-1], reverse=True)):
-        if order_user[-1] != order_user[-5]:
+        if order_user[-1] < order_user[-6] and order_user[-2] == "Непринят":
             order_kb.add(
                 InlineKeyboardButton(
-                    text=f"{order+1}) {order_user[2]}📂  {order_user[-1]}/{order_user[-5]}👤", 
+                    text=f"{order+1+order_2}) {order_user[2]}📂  {order_user[-1]}/{order_user[-6]}👤", 
                     callback_data=f"order_id {order_user[1]}"
                 )
             )
+        else:
+            order_2 -= 1
 
     order_kb.add(
         InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
     )
     return order_kb
+
 
 def order_yes_no_kb(order_id: int) -> InlineKeyboardMarkup:
     order_yes_no_kb = InlineKeyboardMarkup(
@@ -231,7 +235,7 @@ def order_yes_no_kb(order_id: int) -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text="Принять заказ✅", callback_data=f"accept_order {str(order_id)}"),
-                InlineKeyboardButton(text="Отклонить заказ❌", callback_data="show_orders")
+                InlineKeyboardButton(text="Вернуться к заказам👁", callback_data="show_orders")
             ],
             [
                 InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
@@ -241,31 +245,39 @@ def order_yes_no_kb(order_id: int) -> InlineKeyboardMarkup:
 
     return order_yes_no_kb
 
-order_yes_no_admin_kb = InlineKeyboardMarkup(
-    keyboard=[
-        [
-            InlineKeyboardButton(text="Документация пользователя📖", callback_data="documentation")
-        ],
-        [
-            InlineKeyboardButton(text="Посмотреть заказы🔍", callback_data="show_orders")
-        ],
-        [
-            InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
+
+def order_yes_no_admin_kb(order_id: int):
+    order_yes_no_admin_kb = InlineKeyboardMarkup(
+        keyboard=[
+            [
+                InlineKeyboardButton(text="Документация пользователя📖", callback_data="documentation")
+            ],
+            [
+                InlineKeyboardButton(text="Посмотреть заказы🔍", callback_data="show_orders"),
+                InlineKeyboardButton(text="Удалить данный заказ❌", callback_data=f"delete_orders {order_id}")
+            ],
+            [
+                InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
+            ]
         ]
-    ]
-)
+    )
+
+    return order_yes_no_admin_kb
 
 
-order_end = InlineKeyboardMarkup(
-    keyboard=[
-        [
-            InlineKeyboardButton(text="Завершить заказ✅", callback_data="order_end")
-        ],
-        [
-            InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
+def order_end(order_id: int) -> InlineKeyboardMarkup:
+    order_end = InlineKeyboardMarkup(
+        keyboard=[
+            [
+                InlineKeyboardButton(text="Завершить заказ✅", callback_data=f"order_end {order_id}")
+            ],
+            [
+                InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
+            ]
         ]
-    ]
-)
+    )
+
+    return order_end
 
 
 order_no_money = InlineKeyboardMarkup(
@@ -273,6 +285,18 @@ order_no_money = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text="Посмотреть заказ(ы)🔍", callback_data="show_orders"),
             InlineKeyboardButton(text="Виртуальный счёт💰", callback_data="virtual_counts")
+        ],
+        [
+            InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
+        ]
+    ]
+)
+
+
+update_status = InlineKeyboardMarkup(
+    keyboard=[
+        [
+            InlineKeyboardButton(text="Изменить статус🛠", callback_data="update_status")
         ],
         [
             InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
