@@ -60,6 +60,27 @@ def create_kb_cash() -> InlineKeyboardMarkup:
     return kb_cash
 
 
+def create_kb_delete_user() -> InlineKeyboardMarkup:
+
+    """
+    Функция для создания клавиатуры с контактами в виде кнопок.
+    Нужна для выбора удаления клиента
+    """
+    
+    kb_cash = InlineKeyboardMarkup()
+
+    for surname, name, patronymic, user_id in map(lambda x: (x[2], x[1], x[3], x[0]), func.client.get_all_info_cash()):
+        kb_cash.add(
+            InlineKeyboardButton(
+                text=f"{surname} {name} {patronymic}", 
+                callback_data=f"delete_user_find {str(user_id)}"
+            )
+        )
+    kb_cash.add(InlineKeyboardButton(text="🔙Вернуться в главное меню", callback_data="back_main"))
+    
+    return kb_cash
+
+
 back_kb = InlineKeyboardMarkup(
     keyboard=[
         [
@@ -197,10 +218,11 @@ work_orders_admin = InlineKeyboardMarkup(
 )
 
 
-def create_order_kb() -> InlineKeyboardMarkup:
+def create_order_kb_admin() -> tuple[InlineKeyboardMarkup, int]:
     
     """
     Функция для создания клавиатуры с кнопками в виде готовых заказов.
+    Возвращает экземпляр класса InlineKeyboardMarkup и длину списка с заказами.
     """
     
     order_kb = InlineKeyboardMarkup()
@@ -210,8 +232,40 @@ def create_order_kb() -> InlineKeyboardMarkup:
     )
 
     order_2 = 0
+    count_order = 0
+    for order, order_user in enumerate(sorted(func.get_info_orders(), key=lambda x: x[-1], reverse=True)):
+            count_order += 1
+            order_kb.add(
+                InlineKeyboardButton(
+                    text=f"{order+1+order_2}) {order_user[2]}📂  {order_user[-1]}/{order_user[-6]}👤", 
+                    callback_data=f"order_id {order_user[1]}"
+                )
+            )
+
+    order_kb.add(
+        InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
+    )
+    return order_kb, count_order
+
+
+def create_order_kb_load_man() -> tuple[InlineKeyboardMarkup, int]:
+    
+    """
+    Функция для создания клавиатуры с кнопками в виде готовых заказов.
+    Возвращает экземпляр класса InlineKeyboardMarkup и длину списка с заказами.
+    """
+    
+    order_kb = InlineKeyboardMarkup()
+
+    order_kb.add(
+        InlineKeyboardButton("Обновить⚙️", callback_data="show_orders")
+    )
+
+    order_2 = 0
+    count_order = 0
     for order, order_user in enumerate(sorted(func.get_info_orders(), key=lambda x: x[-1], reverse=True)):
         if order_user[-1] < order_user[-6] and order_user[-2] == "Непринят":
+            count_order += 1
             order_kb.add(
                 InlineKeyboardButton(
                     text=f"{order+1+order_2}) {order_user[2]}📂  {order_user[-1]}/{order_user[-6]}👤", 
@@ -224,7 +278,7 @@ def create_order_kb() -> InlineKeyboardMarkup:
     order_kb.add(
         InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")
     )
-    return order_kb
+    return order_kb, count_order
 
 
 def order_yes_no_kb(order_id: int) -> InlineKeyboardMarkup:
@@ -296,7 +350,11 @@ order_no_money = InlineKeyboardMarkup(
 update_status = InlineKeyboardMarkup(
     keyboard=[
         [
-            InlineKeyboardButton(text="Изменить статус🛠", callback_data="update_status")
+            InlineKeyboardButton("Скачать данные⬇️", callback_data="download")
+        ],
+        [
+            InlineKeyboardButton(text="Изменить статус🛠", callback_data="update_status"),
+            InlineKeyboardButton(text="Удалить пользователя🫡", callback_data="delete_user")
         ],
         [
             InlineKeyboardButton("🔙Вернуться в главное меню", callback_data="back_main")

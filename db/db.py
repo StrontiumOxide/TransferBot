@@ -16,27 +16,37 @@ class ConnectBD:
     Для инициализации необходимо ввести имя базы данных, пользователя и её пароль.
     """
 
-    def __init__(self, data: dict) -> None:
+    def __init__(
+            self,
+            user_name: str,
+            password: str,
+            host: str,
+            port: str|int,
+            database_name: str
+    ) -> None:
 
-        database = data["database"]
-        user = data["user"]
-        password = data["password"]
-        
         try:
                 # Проверка соединения с базой данной
-            with psycopg2.connect(database=database, user=user, password=password) as connect:
+            with psycopg2.connect(dsn=f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}') as connect:
                 pass
         except psycopg2.OperationalError:
             raise ConnectDateError
         else:
                 # В случае успеха у экземпляра сохраняются входные данные таблицы
                 # и автоматически создаются заданные отношения
-            self.database = database
-            self.user = user
-            self.password = password
-            self.__create_table__()
 
-            print(f"Авторизация к базе данных {self.database} произведена успешно!")
+            self.user_name = user_name
+            self.password = password
+            self.host = host
+            self.port = port
+            self.database_name = database_name
+            self.__create_table__()
+            try:
+                self.add_status()
+            except psycopg2.errors.UniqueViolation:
+                pass
+            
+            print(f"Авторизация к базе данных {self.database_name} произведена успешно!")
             
 
     def __str__(self) -> str:
@@ -52,7 +62,7 @@ class ConnectBD:
         """
 
             # Подключение к базе данных
-        with psycopg2.connect(database = self.database, user=self.user, password=self.password) as connect:
+        with psycopg2.connect(dsn=f'postgresql://{self.user_name}:{self.password}@{self.host}:{self.port}/{self.database_name}') as connect:
 
                 # Создание курсора для работы с базой данных
             with connect.cursor() as cursor:
@@ -97,8 +107,8 @@ class ConnectBD:
 
                 CREATE TABLE IF NOT EXISTS personal (
                     id BIGINT PRIMARY KEY NOT NULL,
-                    status_id BIGINT REFERENCES status(id),
-                    data_id BIGINT REFERENCES personal_data(id),
+                    status_id BIGINT REFERENCES status(id) ON DELETE CASCADE,
+                    data_id BIGINT REFERENCES personal_data(id) ON DELETE CASCADE,
                     virtual_cash BIGINT NOT NULL
                 );
 
@@ -114,7 +124,8 @@ class ConnectBD:
                     max_count_loader_man BIGINT NOT NULL,
                     commentss TEXT NOT NULL,
                     price BIGINT NOT NULL,
-                    virtual_price BIGINT NOT NULL
+                    virtual_price BIGINT NOT NULL,
+                    status text
                 );
 
                 CREATE TABLE IF NOT EXISTS orders_personal (
@@ -139,7 +150,6 @@ class ConnectBD:
                 DROP TABLE status;
                 DROP TABLE orders_personal;
                 DROP TABLE orders;
-                DROP TABLE category;
             """
         
         self.__connect_bd_send_query__(query=query)
@@ -450,5 +460,34 @@ class ConnectBD:
                 DELETE FROM orders
                 WHERE id = %s;
             """ % (order_id,)
+        
+        self.__connect_bd_send_query__(query=query)
+
+    
+    def update_status(self, user_id: int, status_id: int) -> None:
+
+        """
+        Данный метод обновляет статус у пользователя.
+        """
+
+        query = """
+                UPDATE personal
+                SET status_id = %s
+                WHERE id = %s
+            """ % (status_id, user_id)
+        
+        self.__connect_bd_send_query__(query=query)
+
+    
+    def delete_user(self, user_id: int) -> None:
+
+        """
+        Данный метод удаляет пользователя из базы данных.
+        """
+
+        query = """
+                DELETE FROM personal_data
+                WHERE id = %s;
+            """ % (user_id)
         
         self.__connect_bd_send_query__(query=query)

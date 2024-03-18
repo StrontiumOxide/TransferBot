@@ -1,8 +1,7 @@
-from collections import Counter
 class Status:
 
     """
-    Данный класс описывает статусы
+    Данный класс описывает статусы.
     """
 
     application = "Заявка"

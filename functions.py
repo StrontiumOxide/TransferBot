@@ -5,15 +5,15 @@ from pprint import pprint
 from db.db import ConnectBD
 from collections import Counter
 
-client = ConnectBD(v.data_connect)
+client = ConnectBD(
+    user_name="superadmin",
+    password="02Transfer_fer20",
+    host="79.174.88.128",
+    port="19258",
+    database_name="BDTransferBot"
+)
 
-# client.add_user(
-#     user_id=1172020269,
-#     name="Денис",
-#     surname="Дорофеев",
-#     patronymic="Васильевич",
-#     phone_number=89215428101
-# )
+# client.__drop_table__()
 
 def find_person(person_id: int) -> cl.User:
 
@@ -122,13 +122,16 @@ def send_db() -> None:
     data = list(map(lambda string: list(map(lambda value: value.value, string)), workbook))[1:]
 
     for row in data:
-
-        row_2 = {
-                "id": int(row[0]),
-                "Статус": v.category_id[row.pop(4)],
-                "id_data": int(row[0]),
-                "Баланс": row.pop(4),
-            }
+        
+        try:
+            row_2 = {
+                    "id": int(row[0]),
+                    "Статус": v.category_id[row.pop(4)],
+                    "id_data": int(row[0]),
+                    "Баланс": row.pop(4),
+                }
+        except KeyError:
+            return
         
         client.update_personal_data(li=row)
         client.update_personal(li=list(row_2.values()))
@@ -277,3 +280,17 @@ def delete_order_admin(order_id: int) -> None:
     """
 
     client.delete_order(order_id=order_id)
+
+
+def active_load_man(order_id: int) -> tuple[int, int]:
+    
+    """
+    Данная функция возвращает информацию о степени укомплектованности заказа.
+    """
+
+    for basa_order in get_info_orders():
+        if order_id == basa_order[1]:
+            load_man = basa_order[-6]
+            active_load_man = basa_order[-1]
+            return active_load_man, load_man
+    
