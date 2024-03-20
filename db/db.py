@@ -41,6 +41,7 @@ class ConnectBD:
             self.port = port
             self.database_name = database_name
             self.__create_table__()
+
             try:
                 self.add_status()
             except psycopg2.errors.UniqueViolation:
@@ -491,3 +492,4 @@ class ConnectBD:
             """ % (user_id)
         
         self.__connect_bd_send_query__(query=query)
+        

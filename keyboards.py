@@ -5,11 +5,9 @@ import functions as func
 
 remove_kb = ReplyKeyboardRemove()
 
-
 get_phone = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(text="Поделиться номером📱", request_contact=True)
 )
-
 
 def create_money_kb(depth: int) -> ReplyKeyboardMarkup:
 
@@ -33,6 +31,7 @@ def create_money_kb(depth: int) -> ReplyKeyboardMarkup:
         d += 200
 
     return money_kb
+
 
 yes_no_reply_kb = ReplyKeyboardMarkup(resize_keyboard=True).add(
     KeyboardButton(text="Да✅"), KeyboardButton(text="Нет❌")

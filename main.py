@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import Message, CallbackQuery
 from telebot.apihelper import ApiTelegramException
 from time import sleep
-from pprint import pprint
 from classes import Status, User, Order
 import keyboards as kb
 import variable as v
@@ -25,7 +24,7 @@ def start(message: Message):
 Привет, *{user.name}*🖐
 Ваш статус: *{user.status}*👍
 
-Ваши возможности:
+*Ваши возможности:*
 - добавлять карточки заданий для курьеров📄
 - зачислять виртуальные деньги💵
 - видеть персональные данные👁
@@ -44,7 +43,7 @@ def start(message: Message):
 Привет, *{user.name}*🖐
 Ваш статус: *{user.status}*👍
 
-Ваши возможности:
+*Ваши возможности:*
 - выбор заказов📄
 - просмотр виртуального счёта💵
             """
@@ -82,7 +81,7 @@ def start(message: Message):
         text = f"""
 Привет, *{message.chat.first_name}*🖐
 
-Я бот для компании "Грузоперевозки Михалыч", созданный для служебный целей🚙
+Я бот для компании *"Грузоперевозки Михалыч"*, созданный для служебный целей🚙
 У вас нет прав доступа!❌
 
 Для сотрудничества подайте заявку😉
@@ -91,7 +90,7 @@ def start(message: Message):
         bot.send_message(message.chat.id, text, reply_markup=kb.incognito_start)
 
 
-# @bot.callback_query_handler(func=lambda callback: callback.data == "back_main")
+@bot.message_handler(commands=['menu'])
 def menu(message: Message):
     chat_id = message.chat.id
 
@@ -114,7 +113,7 @@ def starting(callback: CallbackQuery, msg: Message = None):
     if callback.data == "apply":
         text = f"""
 Введите пожалуйста ваши настоящие ФИО
-Пример ввода: Иванов Иван Иванович 
+Пример ввода: *Иванов Иван Иванович* 
 """
         bot.edit_message_text(
             text=text,
@@ -172,7 +171,7 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
 
     text = f"""
 ⚠️Новая заявка от пользователя *{" ".join(fio)}*! Скорее обновите данные!⚠️
-Данное сообщение пропадёт через 60 секунд после отправки!
+Данное сообщение пропадёт через *60* секунд после отправки!
 """
 
     delete_list = []
@@ -219,12 +218,16 @@ def courier(callback: CallbackQuery, msg: Message = None):
 
 Для пополнения виртуального счёта зачислите деньги на следующие реквизиты:
 
-📌 Получатель - *Администратор*
-📌 Название банка - *Имя банка*
-📌 Номер банковской карты - *0000 0000 0000 0000*
+📌 Получатель - *Прозоров Иван Анатольевич*
+📌 Название банка - *Сбербанк МИР*
+📌 Номер банковской карты - *2202 2053 2798 3521*
+📌 Номер телефона *+79535012152*
 📌 Комментарий - *напишите ваше ФИО*
 
 Администратор в ближайшее время зачислит вам виртуальные рубли!
+
+⚠️*ВНИМАНИЕ*⚠️
+При не вводе своего ФИО деньги зачислены не будут!
 """
         bot.edit_message_text(
             text=text,
@@ -749,6 +752,7 @@ def get_data_order(message: Message, msg: Message, msg2: Message):
 
         bot.register_next_step_handler(message, get_answer_order, msg_answer, list_order)
 
+
 def get_answer_order(message: Message, msg_answer: Message, list_order: dict):
     chat_id = message.chat.id
     text_msg = message.text
@@ -970,6 +974,7 @@ def accept_orders(callback: CallbackQuery):
             for msg in delete_list:
                 bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
             
+
 def delete_order_admin(message: Message, msg: Message, order: Order):
     chat_id = message.chat.id
     text_msg = message.text

@@ -1,4 +1,4 @@
-TOKEN = '6842206882:AAFmtRDNoHiEFnwGDCsc9TuzOSswqhsnXmo'
+TOKEN = '7157921117:AAEeJkH57FcJFQN8LTNYpQg4OnmMgzr4UTA'
 
 data_connect = {
     "database": "TransferDataBot",
@@ -50,12 +50,15 @@ def open_logo(file_name: str) -> bytes:
     with open(file=f"db/{file_name}", mode="rb") as file:
         return file.read()
     
-
 local_url = "database = self.database, user=self.user, password=self.password"
 online_url = "'postgresql://superadmin:02Trans_fer20@79.174.88.128:16564/BDTransferBot'"    
 example_url = "'postgresql://user:password@host:port/database_name'"
 
-
 instruction = """
-*Здесь должны быть правила поведения в данной компании...*
+*Документация пользователя*
+1️⃣ При взятии заказа необходимо приехать строго ко времени, которое указано в карточке заказа. Вас будут ожидать заказчик и ваши коллеги водители!
+
+2️⃣ При пополнении виртуального баланса необходимо вводить своё ФИО, чтобы администратор мог вас идентифицировать! При невозможности определить отправителя - транзакция виртуальный рублей не произойдёт!
+
+3️⃣ При не явки на заказ, а также прибытие в не соответствующем состоянии - увольнение без возвращения денежных средств!
 """

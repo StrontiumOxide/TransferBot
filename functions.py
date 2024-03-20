@@ -1,15 +1,14 @@
 import openpyxl
 import classes as cl
 import variable as v
-from pprint import pprint
 from db.db import ConnectBD
 from collections import Counter
 
 client = ConnectBD(
     user_name="superadmin",
     password="02Transfer_fer20",
-    host="79.174.88.128",
-    port="19258",
+    host="79.174.88.142",
+    port="19490",
     database_name="BDTransferBot"
 )
 
@@ -269,7 +268,7 @@ def delete_active_orders(user_id: int, order_id: int) -> None:
 
         # Проверка на антиукомплектование заказа для дальнейшего удаления.
     order = find_info_order(order_id=order_id)
-    if order.active_loader_man == 0:
+    if order.active_loader_man == 0 and order.status == "Принят":
         client.delete_order(order_id=order_id)
 
 

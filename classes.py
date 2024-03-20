@@ -9,6 +9,7 @@ class Status:
     dispatcher = "Администратор"
     director = "Директор"
 
+
 class User:
 
     """
@@ -29,6 +30,7 @@ class User:
         self.passport_issued_by = dict_data["Кем выдан"] 
         self.date_of_issue = dict_data["Дата выдачи"]
         self.department_code = dict_data["Код подразделения"]
+
 
 class Order:
 
@@ -51,5 +53,3 @@ class Order:
         self.virtual_price = li[11]
         self.active_loader_man = active_loader_man
         self.status = li[12]
-
-
