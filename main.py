@@ -170,11 +170,10 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
     )
 
     text = f"""
-⚠️Новая заявка от пользователя *{" ".join(fio)}*! Скорее обновите данные!⚠️
-Данное сообщение пропадёт через *60* секунд после отправки!
+⚠️Новая заявка от пользователя *"{" ".join(fio)}"*! Скорее обновите данные!⚠️
 """
 
-    delete_list = []
+    # delete_list = []
     for person in func.get_full_info_personal():
         if person[4] == Status.dispatcher:
             try:
@@ -182,10 +181,15 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
                     chat_id=person[0],
                     text=f'⚠️Новая заявка от пользователя *{" ".join(fio)}*! Скорее обновите данные!⚠️'
                 )
+                bot.edit_message_reply_markup(
+                    chat_id=person[0], 
+                    message_id=msg_delete.id, 
+                    reply_markup=kb.delete_messege_kb(msg_delete.id)
+                )
             except ApiTelegramException:
                 pass
-            else:
-                delete_list.append(msg_delete)
+            # else:
+            #     delete_list.append(msg_delete)
 
     text = f"""
 Заявка сохранена!✅
@@ -195,9 +199,9 @@ def get_phone_number(message: Message, message_edit: Message, fio: list):
     bot.delete_message(chat_id, message_edit.id)
     bot.send_message(chat_id, text)
 
-    sleep(60)
-    for msg in delete_list:
-        bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
+    # sleep(60)
+    # for msg in delete_list:
+    #     bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
 
 
 @bot.callback_query_handler(
@@ -373,10 +377,15 @@ def enrollment_final(message: Message, price: int, user, msg: Message):
 """        
         func.enrollment_cash(person_id=user.user_id, price=price, operator="+")
 
-        bot.send_message(
+        msg_delete = bot.send_message(
             chat_id=user.user_id,
-            text=f"На ваш виртуальный счёт зачислено *{price}*💵🤩"    
-            ) 
+            text=f"⚠️*ВНИМАНИЕ*⚠️\nНа ваш виртуальный счёт зачислено *{price}*💵🤩"    
+            )
+        bot.edit_message_reply_markup(
+            chat_id=user.user_id, 
+            message_id=msg_delete.id, 
+            reply_markup=kb.delete_messege_kb(msg_delete.id)
+        ) 
         
     elif message.text == "Нет❌":
         text = f"""
@@ -772,10 +781,9 @@ def get_answer_order(message: Message, msg_answer: Message, list_order: dict):
 ⚠️Внимание! Добавлен новый заказ: *"{list_order["Наименование заказа"]}"*⚠️
 Необходимое количество грузчиков: *{list_order['Количество рабочих (шт.)']} шт.*
 Смотри быстрее пока не разобрали😅
-Данное сообщение пропадёт через 60 секунд с момента отправки!
 """     
         
-        delete_list = []
+        # delete_list = []
         for person in func.get_full_info_personal():
             if person[4] == Status.courier:
                 try:
@@ -783,15 +791,19 @@ def get_answer_order(message: Message, msg_answer: Message, list_order: dict):
                         chat_id=person[0],
                         text=text,
                     )
+                    bot.edit_message_reply_markup(
+                        chat_id=person[0], 
+                        message_id=msg_delete.id, 
+                        reply_markup=kb.delete_messege_kb(msg_delete.id)
+                )
                 except ApiTelegramException:
                     pass
-                else:
-                    delete_list.append(msg_delete)
+                # else:
+                #     delete_list.append(msg_delete)
 
-        sleep(60)
-        for msg in delete_list:
-            bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
-
+        # sleep(60)
+        # for msg in delete_list:
+        #     bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
 
     elif text_msg == "Нет❌":
         bot.send_message(chat_id, "Заказ не добавлен❌", reply_markup=kb.back_kb)
@@ -933,7 +945,7 @@ def accept_orders(callback: CallbackQuery):
                 reply_markup=kb.order_no_money
             )
 
-            delete_list = []
+            # delete_list = []
             for person in func.get_full_info_personal():
                 if person[4] == Status.dispatcher:
                     try:
@@ -941,19 +953,29 @@ def accept_orders(callback: CallbackQuery):
                             chat_id=person[0],
                             text=f'⚠️ВНИМАНИЕ⚠️\nГрузчик "*{user.surname} {user.name} {user.patronymic}*" взял заказ *"{order.title}"*😅\nНомер телефона: *+{user.phone_number}*📱'
                         )
+                        bot.edit_message_reply_markup(
+                            chat_id=person[0], 
+                            message_id=msg_delete.id, 
+                            reply_markup=kb.delete_messege_kb(msg_delete.id)
+                        )
                     except ApiTelegramException:
                         pass
-                    else:
-                        delete_list.append(msg_delete)
+                    # else:
+                    #     delete_list.append(msg_delete)
 
             active_load_man, load_man = func.active_load_man(order_id=order.order_id)
             if active_load_man == load_man:
                 for order_id_, user_id_ in func.client.get_order_personal_info():
                     if int(order_id_) == int(order_id):
                         try:
-                            bot.send_message(
+                            msg_delete = bot.send_message(
                                 chat_id=user_id_,
                                 text=f'⚠️ВНИМАНИЕ⚠️\nЗаказ "*{order.title}*" полностью укомплектован грузчиками👍'
+                            )
+                            bot.edit_message_reply_markup(
+                                chat_id=user_id_, 
+                                message_id=msg_delete.id, 
+                                reply_markup=kb.delete_messege_kb(msg_delete.id)
                             )
                         except ApiTelegramException:
                             pass
@@ -965,14 +987,19 @@ def accept_orders(callback: CallbackQuery):
                                 chat_id=person[0],
                                 text=f'⚠️ВНИМАНИЕ⚠️\nЗаказ "*{order.title}*" полностью укомплектован грузчиками👍'
                             )
+                            bot.edit_message_reply_markup(
+                                chat_id=person[0], 
+                                message_id=msg_delete.id, 
+                                reply_markup=kb.delete_messege_kb(msg_delete.id)
+                            )
                         except ApiTelegramException:
                             pass
-                        else:
-                            delete_list.append(msg_delete)
+                        # else:
+                        #     delete_list.append(msg_delete)
 
-            sleep(60)
-            for msg in delete_list:
-                bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
+            # sleep(60)
+            # for msg in delete_list:
+            #     bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
             
 
 def delete_order_admin(message: Message, msg: Message, order: Order):
@@ -1021,6 +1048,12 @@ def delete_user(callback: CallbackQuery):
         )
 
 
+@bot.callback_query_handler(func=lambda callback: "delete_message" in callback.data)
+def delete_message(callback: CallbackQuery):
+    message_id = callback.data.split()[-1]
+    bot.delete_message(chat_id=callback.message.chat.id, message_id=message_id)
+
+
 @bot.message_handler(func=lambda message: "modification status" in message.text)
 def modification_status(message: Message):
     chat_id = message.chat.id
@@ -1055,7 +1088,8 @@ def echo(message: Message):
 @bot.message_handler(content_types=["text"])
 def echo(message: Message):
     bot.delete_message(message.chat.id, message.id)
-    bot.send_message(message.chat.id, "Извините я вас не понимаю!🧐\nВведите команду */start*🛠")
+    msg = bot.send_message(message.chat.id, "Извините я вас не понимаю!🧐\nВведите команду */start*🛠")
+    bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=msg.id, reply_markup=kb.delete_messege_kb(msg.id))
 
 
 bot.infinity_polling(skip_pending=True)

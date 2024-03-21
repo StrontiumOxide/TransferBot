@@ -360,3 +360,14 @@ update_status = InlineKeyboardMarkup(
         ]
     ]
 )
+
+def delete_messege_kb(message_id: int) -> InlineKeyboardMarkup:
+    delete_messege_kb = InlineKeyboardMarkup(
+        keyboard=[
+            [
+                InlineKeyboardButton(text="Удалить данное сообщение🗑", callback_data=f"delete_message {message_id}")
+            ]
+        ]
+    )
+
+    return delete_messege_kb
